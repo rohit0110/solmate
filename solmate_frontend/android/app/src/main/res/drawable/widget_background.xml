@@ -1,5 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#1E003C" /> <!-- Dark Purple, matching the app's gradient end color -->
-    <corners android:radius="16dp" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Outer black border -->
+    <item
+        android:left="10dp"
+        android:top="10dp"
+        android:right="10dp"
+        android:bottom="10dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#000000"/>
+            <corners android:radius="0dp"/>
+        </shape>
+    </item>
+
+    <!-- White inner space -->
+    <item
+        android:left="6dp"
+        android:top="6dp"
+        android:right="6dp"
+        android:bottom="6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF"/>
+            <corners android:radius="0dp"/>
+        </shape>
+    </item>
+
+    <!-- Inner black border -->
+    <item
+        android:left="10dp"
+        android:top="10dp"
+        android:right="10dp"
+        android:bottom="10dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#000000"/>
+            <corners android:radius="0dp"/>
+        </shape>
+    </item>
+
+    <!-- Content area (white) -->
+    <item
+        android:left="14dp"
+        android:top="14dp"
+        android:right="14dp"
+        android:bottom="14dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF"/>
+            <corners android:radius="0dp"/>
+        </shape>
+    </item>
+
+</layer-list>
