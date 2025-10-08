@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:solmate_frontend/solmate_data.dart';
+import 'package:solmate_frontend/solmate_hatching_screen.dart'; // Added import
 import 'package:solmate_frontend/solmate_screen.dart';
 
 class SolmateSelectionScreen extends StatefulWidget {
@@ -44,7 +45,7 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => SolmateScreen(
+          builder: (context) => SolmateHatchingScreen(
             solmateAnimal: selectedSolmate,
             publicKey: _selectedPublicKey!,
           ),
