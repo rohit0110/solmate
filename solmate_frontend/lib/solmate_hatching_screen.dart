@@ -109,8 +109,8 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
                     child: NesContainer(
                       padding: const EdgeInsets.all(16.0),
                       backgroundColor: colorScheme.surface, // Use surface color
-                      child: Image.network(
-                        widget.solmateAnimal.imageUrl,
+                      child: Image.asset(
+                        widget.solmateAnimal.normalSpritePath,
                         width: 150,
                         height: 150,
                         fit: BoxFit.contain,

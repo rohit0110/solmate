@@ -144,25 +144,39 @@ class SolmateChoiceCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.network(
-              solmate.imageUrl,
-              width: 100,
-              height: 100,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => NesContainer(
+            if (solmate.name == "Dragon")
+              Image.asset(
+                solmate.normalSpritePath,
                 width: 100,
                 height: 100,
-                backgroundColor: colorScheme.background, // Use background color for error placeholder
-                child: Icon(Icons.pets, size: 50, color: colorScheme.onBackground.withOpacity(0.5)),
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => NesContainer(
+                  width: 100,
+                  height: 100,
+                  backgroundColor: colorScheme.background,
+                  child: Icon(Icons.pets, size: 50, color: colorScheme.onBackground.withOpacity(0.5)),
+                ),
+              )
+            else
+              Image.network(
+                solmate.normalSpritePath,
+                width: 100,
+                height: 100,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => NesContainer(
+                  width: 100,
+                  height: 100,
+                  backgroundColor: colorScheme.background,
+                  child: Icon(Icons.pets, size: 50, color: colorScheme.onBackground.withOpacity(0.5)),
+                ),
               ),
-            ),
             const SizedBox(height: 10),
-                        Text(
+            Text(
               solmate.name.toUpperCase(),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface, // Use onSurface color for text
+                color: colorScheme.onSurface,
               ),
             ),
           ],

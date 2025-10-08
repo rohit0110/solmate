@@ -18,6 +18,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   late String _solmateNameDisplay;
   int _health = 100;
   int _happiness = 100;
+  bool _isHappy = false; // New state variable
   late String _pokemonImageUrl;
   String _message = "Welcome to your Solmate!"; // Initial message
 
@@ -25,7 +26,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   void initState() {
     super.initState();
     _solmateNameDisplay = widget.solmateName;
-    _pokemonImageUrl = widget.solmateAnimal.imageUrl;
+    _pokemonImageUrl = widget.solmateAnimal.normalSpritePath;
     _saveSolmateData();
   }
 
@@ -33,7 +34,12 @@ class _SolmateScreenState extends State<SolmateScreen> {
     await HomeWidget.saveWidgetData<String>('solmateName', _solmateNameDisplay);
     await HomeWidget.saveWidgetData<int>('solmateHealth', _health);
     await HomeWidget.saveWidgetData<int>('solmateHappiness', _happiness);
-    await HomeWidget.saveWidgetData<String>('solmateImageUrl', _pokemonImageUrl);
+    // Save the currently displayed image URL
+    await HomeWidget.saveWidgetData<String>('solmateImageUrl', 
+      widget.solmateAnimal.name == "Dragon" && _isHappy
+          ? widget.solmateAnimal.happySpritePath
+          : widget.solmateAnimal.normalSpritePath
+    );
     await HomeWidget.updateWidget(name: 'SolmateWidget');
   }
 
@@ -56,7 +62,8 @@ class _SolmateScreenState extends State<SolmateScreen> {
 
   void _emoteSolmate() {
     setState(() {
-      _message = "Your Solmate emotes happily!";
+      _isHappy = !_isHappy;
+      _message = _isHappy ? "Your Solmate emotes happily!" : "Your Solmate is back to normal!";
     });
     _saveSolmateData();
   }
@@ -81,19 +88,34 @@ class _SolmateScreenState extends State<SolmateScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.network(
-                        _pokemonImageUrl,
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.none, // For pixelated look
-                        errorBuilder: (context, error, stackTrace) => NesContainer(
+                      if (widget.solmateAnimal.name == "Dragon")
+                        Image.asset(
+                          _isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
                           width: 150,
                           height: 150,
-                          backgroundColor: colorScheme.background, // Use background color for error placeholder
-                          child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.none,
+                          errorBuilder: (context, error, stackTrace) => NesContainer(
+                            width: 150,
+                            height: 150,
+                            backgroundColor: colorScheme.background,
+                            child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+                          ),
+                        )
+                      else
+                        Image.network(
+                          widget.solmateAnimal.normalSpritePath,
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.none, // For pixelated look
+                          errorBuilder: (context, error, stackTrace) => NesContainer(
+                            width: 150,
+                            height: 150,
+                            backgroundColor: colorScheme.background,
+                            child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 10),
                       Text(
                         _solmateNameDisplay.toUpperCase(),

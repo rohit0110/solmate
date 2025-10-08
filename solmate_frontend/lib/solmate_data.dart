@@ -1,21 +1,22 @@
 class SolmateAnimal {
   final String name;
-  final String imageUrl;
+  final String normalSpritePath;
+  final String happySpritePath;
 
-  SolmateAnimal({required this.name, required this.imageUrl});
+  SolmateAnimal({required this.name, required this.normalSpritePath, required this.happySpritePath});
 }
 
 final List<SolmateAnimal> solmateAnimals = [
-  SolmateAnimal(name: "Dragon", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/149.png"), // Dragonite
-  SolmateAnimal(name: "Dino", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"), // Bulbasaur
-  SolmateAnimal(name: "Frog", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png"), // Charizard (close enough to a lizard/dino)
-  SolmateAnimal(name: "Dog", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/58.png"), // Growlithe
-  SolmateAnimal(name: "Cat", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png"), // Meowth
-  SolmateAnimal(name: "Bird", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/16.png"), // Pidgey
-  SolmateAnimal(name: "Fish", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png"), // Magikarp
-  SolmateAnimal(name: "Bear", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/217.png"), // Ursaring
-  SolmateAnimal(name: "Rabbit", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/300.png"), // Skitty
-  SolmateAnimal(name: "Mouse", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"), // Pikachu
-  SolmateAnimal(name: "Turtle", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png"), // Squirtle
-  SolmateAnimal(name: "Snake", imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/23.png"), // Ekans
+  SolmateAnimal(name: "Dragon", normalSpritePath: "assets/sprites/dragon_normal.png", happySpritePath: "assets/sprites/dragon_happy.png"),
+  SolmateAnimal(name: "Dino", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"), // Bulbasaur
+  SolmateAnimal(name: "Frog", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png"), // Charizard (close enough to a lizard/dino)
+  // SolmateAnimal(name: "Dog", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/58.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/58.png"), // Growlithe
+  // SolmateAnimal(name: "Cat", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png"), // Meowth
+  // SolmateAnimal(name: "Bird", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/16.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/16.png"), // Pidgey
+  // SolmateAnimal(name: "Fish", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png"), // Magikarp
+  // SolmateAnimal(name: "Bear", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/217.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/217.png"), // Ursaring
+  // SolmateAnimal(name: "Rabbit", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/300.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/300.png"), // Skitty
+  // SolmateAnimal(name: "Mouse", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"), // Pikachu
+  // SolmateAnimal(name: "Turtle", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png"), // Squirtle
+  // SolmateAnimal(name: "Snake", normalSpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/23.png", happySpritePath: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/23.png"), // Ekans
 ];
