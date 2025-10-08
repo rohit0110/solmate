@@ -5,15 +5,17 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF121212), // Very Dark Grey/Black
-              Color(0xFF1E003C), // Dark Purple
+              colorScheme.background, // Use background color from theme
+              colorScheme.surface, // Use surface color from theme
             ],
           ),
         ),
@@ -27,11 +29,11 @@ class HomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushNamed(context, '/solmateSelection');
                   },
-                  icon: const Icon(Icons.account_balance_wallet, size: 28),
-                  label: const Text('Connect Wallet'),
+                  icon: Icon(Icons.account_balance_wallet, size: 28, color: colorScheme.onPrimary),
+                  label: Text('Connect Wallet', style: TextStyle(color: colorScheme.onPrimary)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFBB86FC), // Light Purple for contrast
-                    foregroundColor: Colors.black,
+                    backgroundColor: colorScheme.primary, // Use primary color from theme
+                    foregroundColor: colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),

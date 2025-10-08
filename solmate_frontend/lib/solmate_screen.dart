@@ -64,8 +64,10 @@ class _SolmateScreenState extends State<SolmateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF9BBC0F), // Game Boy screen background color
+      backgroundColor: colorScheme.background, // Use background color from theme
       body: SafeArea(
         child: Column(
           children: [
@@ -75,9 +77,9 @@ class _SolmateScreenState extends State<SolmateScreen> {
                   margin: const EdgeInsets.all(20.0),
                   padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F380F), // Darker green for the display area
+                    color: colorScheme.surface, // Use surface color for display area
                     borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(color: const Color(0xFF0F380F), width: 4.0),
+                    border: Border.all(color: colorScheme.primary, width: 4.0),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -91,28 +93,28 @@ class _SolmateScreenState extends State<SolmateScreen> {
                         errorBuilder: (context, error, stackTrace) => Container(
                           width: 150,
                           height: 150,
-                          color: const Color(0xFF2C2C2C),
-                          child: const Icon(Icons.pets, size: 80, color: Colors.grey),
+                          color: colorScheme.background, // Use background color for error placeholder
+                          child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         _solmateNameDisplay.toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'PressStart2P', // Placeholder for custom 8-bit font
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF8B8B8B), // Game Boy text color
+                          color: colorScheme.onSurface, // Use onSurface color
                           letterSpacing: 2.0,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _buildStatRow('HP', _health, Colors.red.shade400, Icons.favorite),
-                      _buildStatRow('HAP', _happiness, Colors.yellow.shade400, Icons.sentiment_satisfied_alt),
+                      _buildStatRow('HP', _health, colorScheme.error, Icons.favorite),
+                      _buildStatRow('HAP', _happiness, colorScheme.tertiary, Icons.sentiment_satisfied_alt),
                       const SizedBox(height: 10),
                       Text(
                         '''Wallet: ${widget.publicKey.substring(0, 6)}...${widget.publicKey.substring(widget.publicKey.length - 4)}''',
-                        style: const TextStyle(fontSize: 10, color: Color(0xFF8B8B8B)),
+                        style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withOpacity(0.7)),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -123,7 +125,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
             // Hardware-like buttons
             Container(
               padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
-              color: const Color(0xFFC0C0C0), // Game Boy console grey
+              color: colorScheme.surface, // Use surface color for console body
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -140,6 +142,8 @@ class _SolmateScreenState extends State<SolmateScreen> {
   }
 
   Widget _buildStatRow(String label, int value, Color color, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -149,11 +153,11 @@ class _SolmateScreenState extends State<SolmateScreen> {
           const SizedBox(width: 5),
           Text(
             '$label: ',
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'PressStart2P', // Placeholder for custom 8-bit font
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF8B8B8B),
+              color: colorScheme.onSurface, // Use onSurface color
             ),
           ),
           Text(
@@ -191,6 +195,8 @@ class _HardwareButtonState extends State<_HardwareButton> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTapDown: (_) {
         setState(() {
@@ -213,29 +219,29 @@ class _HardwareButtonState extends State<_HardwareButton> {
         width: 80,
         height: 80,
         decoration: BoxDecoration(
-          color: const Color(0xFF606060), // Darker grey for button base
+          color: colorScheme.primary, // Use primary color for button base
           borderRadius: BorderRadius.circular(10.0),
           boxShadow: _isPressed
               ? [] // No shadow when pressed
-              : const [
+              : [
                   BoxShadow(
-                    color: Color(0xFF303030),
-                    offset: Offset(0, 4),
+                    color: colorScheme.onSurface.withOpacity(0.3), // Use onSurface for shadow
+                    offset: const Offset(0, 4),
                     blurRadius: 0,
                     spreadRadius: 0,
                   ),
                 ],
-          border: Border.all(color: const Color(0xFF303030), width: 2.0),
+          border: Border.all(color: colorScheme.onSurface.withOpacity(0.5), width: 2.0),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(widget.icon, color: Colors.white, size: 30),
+            Icon(widget.icon, color: colorScheme.onPrimary, size: 30),
             const SizedBox(height: 5),
             Text(
               widget.label,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: colorScheme.onPrimary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

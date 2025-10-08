@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:solmate_frontend/solmate_data.dart';
 import 'package:solmate_frontend/solmate_hatching_screen.dart'; // Added import
-import 'package:solmate_frontend/solmate_screen.dart';
+// import 'package:solmate_frontend/solmate_screen.dart'; // No longer directly navigating to SolmateScreen
 
 class SolmateSelectionScreen extends StatefulWidget {
   const SolmateSelectionScreen({super.key});
@@ -60,34 +60,36 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Choose Your Solmate', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF121212),
+        title: Text('Choose Your Solmate', style: TextStyle(color: colorScheme.onBackground)),
+        backgroundColor: colorScheme.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: colorScheme.onBackground),
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF121212),
-              Color(0xFF1E003C),
+              colorScheme.background,
+              colorScheme.surface,
             ],
           ),
         ),
         child: _availableChoices.isEmpty
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC)))
+            ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
             : Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Select your Solmate:',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onBackground),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
@@ -113,7 +115,7 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
                     Text(
                       '''Simulated Public Key: 
 ${_selectedPublicKey}''',
-                      style: const TextStyle(fontSize: 14, color: Colors.white70),
+                      style: TextStyle(fontSize: 14, color: colorScheme.onBackground.withOpacity(0.7)),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -132,11 +134,13 @@ class SolmateChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: colorScheme.surface, // Use surface color for card background
           borderRadius: BorderRadius.circular(20.0),
           boxShadow: [
             BoxShadow(
@@ -158,17 +162,17 @@ class SolmateChoiceCard extends StatelessWidget {
               errorBuilder: (context, error, stackTrace) => Container(
                 width: 100,
                 height: 100,
-                color: const Color(0xFF2C2C2C),
-                child: const Icon(Icons.pets, size: 50, color: Colors.grey),
+                color: colorScheme.background, // Use background color for error placeholder
+                child: Icon(Icons.pets, size: 50, color: colorScheme.onBackground.withOpacity(0.5)),
               ),
             ),
             const SizedBox(height: 10),
             Text(
               solmate.name.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: colorScheme.onSurface, // Use onSurface color for text
               ),
             ),
           ],

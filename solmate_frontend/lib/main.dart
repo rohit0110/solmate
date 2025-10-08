@@ -13,12 +13,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = ColorScheme(
+      brightness: Brightness.dark,
+      primary: const Color(0xFF1F6FEB),
+      onPrimary: Colors.white,
+      secondary: const Color(0xFF6A5BFF),
+      onSecondary: Colors.white,
+      surface: const Color(0xFF1A1C2C),
+      onSurface: Colors.white,
+      background: const Color(0xFF0B0D17),
+      onBackground: Colors.white,
+      error: const Color(0xFFE94B4B),
+      onError: Colors.white,
+      tertiary: const Color(0xFFFF4D9D), // accent
+      onTertiary: Colors.white,
+    );
+    final theme = ThemeData(colorScheme: colorScheme, useMaterial3: true);
+
     return MaterialApp(
       title: 'Solmate App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: theme,
       initialRoute: '/',
       routes: {
         '/': (context) => const HomeScreen(),

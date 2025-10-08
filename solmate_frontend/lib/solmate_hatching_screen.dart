@@ -59,8 +59,10 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF9BBC0F), // Game Boy screen background color
+      backgroundColor: colorScheme.background, // Use background color from theme
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -68,13 +70,13 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Your Solmate is hatching!',
                   style: TextStyle(
                     fontFamily: 'PressStart2P', // Placeholder for custom 8-bit font
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F380F),
+                    color: colorScheme.onBackground, // Use onBackground color
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -88,9 +90,9 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0F380F),
+                        color: colorScheme.surface, // Use surface color
                         borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(color: const Color(0xFF0F380F), width: 4.0),
+                        border: Border.all(color: colorScheme.primary, width: 4.0), // Use primary color for border
                       ),
                       child: Image.network(
                         widget.solmateAnimal.imageUrl,
@@ -101,8 +103,8 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                         errorBuilder: (context, error, stackTrace) => Container(
                           width: 150,
                           height: 150,
-                          color: const Color(0xFF2C2C2C),
-                          child: const Icon(Icons.pets, size: 80, color: Colors.grey),
+                          color: colorScheme.background, // Use background color for error placeholder
+                          child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
                         ),
                       ),
                     ),
@@ -112,12 +114,12 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                 if (_isHatched)
                   Column(
                     children: [
-                      const Text(
+                      Text(
                         'Give your Solmate a name:',
                         style: TextStyle(
                           fontFamily: 'PressStart2P',
                           fontSize: 14,
-                          color: Color(0xFF0F380F),
+                          color: colorScheme.onBackground, // Use onBackground color
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -126,24 +128,24 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                         width: 200,
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colorScheme.onPrimary, // Use onPrimary for text field background
                           borderRadius: BorderRadius.circular(5.0),
-                          border: Border.all(color: const Color(0xFF0F380F), width: 2.0),
+                          border: Border.all(color: colorScheme.primary, width: 2.0),
                         ),
                         child: TextField(
                           controller: _nameController,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'PressStart2P',
                             fontSize: 16,
-                            color: Colors.black,
+                            color: colorScheme.onSurface, // Use onSurface for text color
                           ),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Enter Name',
                             hintStyle: TextStyle(
                               fontFamily: 'PressStart2P',
                               fontSize: 16,
-                              color: Colors.grey,
+                              color: colorScheme.onSurface.withOpacity(0.5),
                             ),
                             border: InputBorder.none,
                           ),
@@ -154,8 +156,8 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                       ElevatedButton(
                         onPressed: _confirmName,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F380F), // Dark green button
-                          foregroundColor: Colors.white,
+                          backgroundColor: colorScheme.primary, // Use primary color
+                          foregroundColor: colorScheme.onPrimary, // Use onPrimary color
                           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
