@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:math';
+import 'package:home_widget/home_widget.dart';
 
 class SolmateScreen extends StatefulWidget {
   const SolmateScreen({super.key});
@@ -41,6 +42,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
           _solmateName = data['name'];
           _isLoading = false;
         });
+        _saveSolmateData();
       } else {
         setState(() {
           _errorMessage = 'Failed to load Pokémon: ${response.statusCode}';
@@ -53,6 +55,14 @@ class _SolmateScreenState extends State<SolmateScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _saveSolmateData() async {
+    await HomeWidget.saveWidgetData<String>('solmateName', _solmateName);
+    await HomeWidget.saveWidgetData<int>('solmateHealth', _health);
+    await HomeWidget.saveWidgetData<int>('solmateHappiness', _happiness);
+    await HomeWidget.saveWidgetData<String>('solmateImageUrl', _pokemonImageUrl);
+    await HomeWidget.updateWidget(name: 'SolmateWidget');
   }
 
   @override
