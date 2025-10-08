@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.2.1
   home_widget: ^0.8.0
+  nes_ui: ^0.26.0
 
 dev_dependencies:
   flutter_test:

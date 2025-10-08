@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:nes_ui/nes_ui.dart'; // Added nes_ui import
 import 'package:solmate_frontend/solmate_data.dart';
 
 class SolmateScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   int _health = 100;
   int _happiness = 100;
   late String _pokemonImageUrl;
+  String _message = "Welcome to your Solmate!"; // Initial message
 
   @override
   void initState() {
@@ -39,27 +41,24 @@ class _SolmateScreenState extends State<SolmateScreen> {
     setState(() {
       _health = (_health + 10).clamp(0, 100);
       _happiness = (_happiness + 5).clamp(0, 100);
+      _message = "You fed your Solmate!";
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('You fed your Solmate!')),
-    );
     _saveSolmateData();
   }
 
   void _petSolmate() {
     setState(() {
       _happiness = (_happiness + 15).clamp(0, 100);
+      _message = "You pet your Solmate!";
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('You petted your Solmate!')),
-    );
     _saveSolmateData();
   }
 
   void _emoteSolmate() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Your Solmate emotes happily!')),
-    );
+    setState(() {
+      _message = "Your Solmate emotes happily!";
+    });
+    _saveSolmateData();
   }
 
   @override
@@ -71,16 +70,14 @@ class _SolmateScreenState extends State<SolmateScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: Center(
-                child: Container(
-                  margin: const EdgeInsets.all(20.0),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: NesContainer(
                   padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface, // Use surface color for display area
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(color: colorScheme.primary, width: 4.0),
-                  ),
+                  label: "solmate",
+                  backgroundColor: colorScheme.surface, // Use surface color for display area
+                  painterBuilder: NesContainerSquareCornerPainter.new,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -90,10 +87,10 @@ class _SolmateScreenState extends State<SolmateScreen> {
                         height: 150,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.none, // For pixelated look
-                        errorBuilder: (context, error, stackTrace) => Container(
+                        errorBuilder: (context, error, stackTrace) => NesContainer(
                           width: 150,
                           height: 150,
-                          color: colorScheme.background, // Use background color for error placeholder
+                          backgroundColor: colorScheme.background, // Use background color for error placeholder
                           child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
                         ),
                       ),
@@ -101,7 +98,6 @@ class _SolmateScreenState extends State<SolmateScreen> {
                       Text(
                         _solmateNameDisplay.toUpperCase(),
                         style: TextStyle(
-                          fontFamily: 'PressStart2P', // Placeholder for custom 8-bit font
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface, // Use onSurface color
@@ -112,20 +108,19 @@ class _SolmateScreenState extends State<SolmateScreen> {
                       _buildStatRow('HP', _health, colorScheme.error, Icons.favorite),
                       _buildStatRow('HAP', _happiness, colorScheme.tertiary, Icons.sentiment_satisfied_alt),
                       const SizedBox(height: 10),
-                      Text(
-                        '''Wallet: ${widget.publicKey.substring(0, 6)}...${widget.publicKey.substring(widget.publicKey.length - 4)}''',
-                        style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withOpacity(0.7)),
-                        textAlign: TextAlign.center,
-                      ),
                     ],
                   ),
                 ),
               ),
             ),
+            const SizedBox(height: 20), // Spacing between card and message
+            // Message display area
+            NesRunningText(text: _message),
+            const Spacer(),
             // Hardware-like buttons
             Container(
               padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
-              color: colorScheme.surface, // Use surface color for console body
+              color: colorScheme.background, // Use background color for console body
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -154,16 +149,14 @@ class _SolmateScreenState extends State<SolmateScreen> {
           Text(
             '$label: ',
             style: TextStyle(
-              fontFamily: 'PressStart2P', // Placeholder for custom 8-bit font
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface, // Use onSurface color
+              color: colorScheme.onSurface,
             ),
           ),
           Text(
             '$value',
             style: TextStyle(
-              fontFamily: 'PressStart2P', // Placeholder for custom 8-bit font
               fontSize: 14,
               color: color,
               fontWeight: FontWeight.bold,

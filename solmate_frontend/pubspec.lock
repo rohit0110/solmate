@@ -41,6 +41,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  crypto:
+    dependency: transitive
+    description:
+      name: crypto
+      sha256: "1e445881f28f22d6140f181e07737b22f1e099a5e1ff94b0af2f9e4a463f4855"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.6"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -49,6 +57,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
+  equatable:
+    dependency: transitive
+    description:
+      name: equatable
+      sha256: "567c64b3cb4cf82397aac55f4f0cbd3ca20d77c6c03bedbc4ceaddc08904aef7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.7"
   fake_async:
     dependency: transitive
     description:
@@ -78,11 +94,27 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
+  flutter_mini_sprite:
+    dependency: transitive
+    description:
+      name: flutter_mini_sprite
+      sha256: "3ade17b6af09911052531bc7548bf84ed44072c8d49861d9838a7a1445925cec"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1+1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
+  google_fonts:
+    dependency: transitive
+    description:
+      name: google_fonts
+      sha256: "517b20870220c48752eafa0ba1a797a092fb22df0d89535fd9991e86ee2cdd9c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.3.2"
   home_widget:
     dependency: "direct main"
     description:
@@ -163,6 +195,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.16.0"
+  mini_sprite:
+    dependency: transitive
+    description:
+      name: mini_sprite
+      sha256: b92bb4fcd81991b39798ce2f58ed3c044035cf22688df44977ee38c7765667e9
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
+  nes_ui:
+    dependency: "direct main"
+    description:
+      name: nes_ui
+      sha256: "22589e271136fabfcdb52c56642899ca4d66a438c0ba64c6bf424a240b05e7e6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.26.0"
   path:
     dependency: transitive
     description:
@@ -219,6 +267,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  phased:
+    dependency: transitive
+    description:
+      name: phased
+      sha256: "4dc19d589fd059268b07357767ac96eef2861eb5e8ceedf9d23fb933f0128396"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   platform:
     dependency: transitive
     description:
@@ -296,6 +352,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  universal_platform:
+    dependency: transitive
+    description:
+      name: universal_platform
+      sha256: "64e16458a0ea9b99260ceb5467a214c1f298d647c659af1bff6d3bf82536b1ec"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   vector_math:
     dependency: transitive
     description:

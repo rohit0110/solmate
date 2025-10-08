@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:nes_ui/nes_ui.dart'; // Added nes_ui import
 import 'package:solmate_frontend/solmate_data.dart';
-import 'package:solmate_frontend/solmate_hatching_screen.dart'; // Added import
-// import 'package:solmate_frontend/solmate_screen.dart'; // No longer directly navigating to SolmateScreen
+import 'package:solmate_frontend/solmate_hatching_screen.dart';
 
 class SolmateSelectionScreen extends StatefulWidget {
   const SolmateSelectionScreen({super.key});
@@ -53,7 +53,7 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: Public key not selected.')),
+        SnackBar(content: Text('Error: Public key not selected.', style: TextStyle(color: Theme.of(context).colorScheme.onError))),
       );
     }
   }
@@ -63,6 +63,7 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: Text('Choose Your Solmate', style: TextStyle(color: colorScheme.onBackground)),
         backgroundColor: colorScheme.background,
@@ -81,16 +82,16 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
           ),
         ),
         child: _availableChoices.isEmpty
-            ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
+            ? Center(child: NesProgressBar(value: 0.5)) // Using NesPixelatedProgressBar
             : Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Select your Solmate:',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onBackground),
-                      textAlign: TextAlign.center,
+                    NesRunningText(
+                      text: 'Select your Solmate:',
+
+                     
                     ),
                     const SizedBox(height: 20),
                     Expanded(
@@ -112,12 +113,7 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Text(
-                      '''Simulated Public Key: 
-${_selectedPublicKey}''',
-                      style: TextStyle(fontSize: 14, color: colorScheme.onBackground.withOpacity(0.7)),
-                      textAlign: TextAlign.center,
-                    ),
+                    
                   ],
                 ),
               ),
@@ -138,19 +134,8 @@ class SolmateChoiceCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface, // Use surface color for card background
-          borderRadius: BorderRadius.circular(20.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+      child: NesContainer(
+        backgroundColor: colorScheme.surface, // Use surface color for card background
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -159,15 +144,15 @@ class SolmateChoiceCard extends StatelessWidget {
               width: 100,
               height: 100,
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Container(
+              errorBuilder: (context, error, stackTrace) => NesContainer(
                 width: 100,
                 height: 100,
-                color: colorScheme.background, // Use background color for error placeholder
+                backgroundColor: colorScheme.background, // Use background color for error placeholder
                 child: Icon(Icons.pets, size: 50, color: colorScheme.onBackground.withOpacity(0.5)),
               ),
             ),
             const SizedBox(height: 10),
-            Text(
+                        Text(
               solmate.name.toUpperCase(),
               style: TextStyle(
                 fontSize: 20,

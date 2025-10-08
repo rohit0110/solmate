@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nes_ui/nes_ui.dart'; // Added nes_ui import
 import 'package:solmate_frontend/solmate_data.dart';
 import 'package:solmate_frontend/solmate_screen.dart';
 
@@ -52,7 +53,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please give your Solmate a name!')),
+        SnackBar(content: NesRunningText(text: "Please Give your Solmate a name!")),
       );
     }
   }
@@ -73,10 +74,9 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                 Text(
                   'Your Solmate is hatching!',
                   style: TextStyle(
-                    fontFamily: 'PressStart2P', // Placeholder for custom 8-bit font
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.onBackground, // Use onBackground color
+                    color: colorScheme.onBackground,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -87,23 +87,19 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                   child: AnimatedScale(
                     scale: _isHatched ? 1.0 : 0.5,
                     duration: const Duration(seconds: 1),
-                    child: Container(
+                    child: NesContainer(
                       padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface, // Use surface color
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(color: colorScheme.primary, width: 4.0), // Use primary color for border
-                      ),
+                      backgroundColor: colorScheme.surface, // Use surface color
                       child: Image.network(
                         widget.solmateAnimal.imageUrl,
                         width: 150,
                         height: 150,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.none,
-                        errorBuilder: (context, error, stackTrace) => Container(
+                        errorBuilder: (context, error, stackTrace) => NesContainer(
                           width: 150,
                           height: 150,
-                          color: colorScheme.background, // Use background color for error placeholder
+                          backgroundColor: colorScheme.background, // Use background color for error placeholder
                           child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
                         ),
                       ),
@@ -117,57 +113,27 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                       Text(
                         'Give your Solmate a name:',
                         style: TextStyle(
-                          fontFamily: 'PressStart2P',
                           fontSize: 14,
-                          color: colorScheme.onBackground, // Use onBackground color
+
+                          color: colorScheme.onBackground,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 10),
-                      Container(
+                      SizedBox(
                         width: 200,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: colorScheme.onPrimary, // Use onPrimary for text field background
-                          borderRadius: BorderRadius.circular(5.0),
-                          border: Border.all(color: colorScheme.primary, width: 2.0),
-                        ),
-                        child: TextField(
+                        // child: NesRunningText(text: "Enter Name"),
+                        child: TextField( 
                           controller: _nameController,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'PressStart2P',
-                            fontSize: 16,
-                            color: colorScheme.onSurface, // Use onSurface for text color
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Enter Name',
-                            hintStyle: TextStyle(
-                              fontFamily: 'PressStart2P',
-                              fontSize: 16,
-                              color: colorScheme.onSurface.withOpacity(0.5),
-                            ),
-                            border: InputBorder.none,
-                          ),
                           onSubmitted: (_) => _confirmName(),
                         ),
                       ),
                       const SizedBox(height: 20),
-                      ElevatedButton(
+                      NesButton(
+                        type: NesButtonType.primary,
                         onPressed: _confirmName,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary, // Use primary color
-                          foregroundColor: colorScheme.onPrimary, // Use onPrimary color
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          textStyle: const TextStyle(
-                            fontFamily: 'PressStart2P',
-                            fontSize: 16,
-                          ),
-                        ),
-                        child: const Text('Confirm Name'),
+                        child: Text('Confirm Name', style: TextStyle(color: colorScheme.onPrimary)),
                       ),
                     ],
                   ),
