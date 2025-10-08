@@ -25,7 +25,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/solmate');
+                    Navigator.pushNamed(context, '/solmateSelection');
                   },
                   icon: const Icon(Icons.account_balance_wallet, size: 28),
                   label: const Text('Connect Wallet'),

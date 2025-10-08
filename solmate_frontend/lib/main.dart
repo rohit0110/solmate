@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:solmate_frontend/home_screen.dart';
-import 'package:solmate_frontend/solmate_screen.dart';
+import 'package:solmate_frontend/solmate_selection_screen.dart';
+// SolmateScreen is now pushed with arguments, no longer a direct named route
+// import 'package:solmate_frontend/solmate_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +22,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const HomeScreen(),
-        '/solmate': (context) => const SolmateScreen(),
+        '/solmateSelection': (context) => const SolmateSelectionScreen(),
       },
     );
   }

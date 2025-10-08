@@ -1,60 +1,29 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'dart:math';
 import 'package:home_widget/home_widget.dart';
+import 'package:solmate_frontend/solmate_data.dart';
 
 class SolmateScreen extends StatefulWidget {
-  const SolmateScreen({super.key});
+  final SolmateAnimal solmateAnimal;
+  final String publicKey;
+
+  const SolmateScreen({super.key, required this.solmateAnimal, required this.publicKey});
 
   @override
   State<SolmateScreen> createState() => _SolmateScreenState();
 }
 
 class _SolmateScreenState extends State<SolmateScreen> {
-  String _solmateName = "Solmate";
+  late String _solmateName;
   int _health = 100;
   int _happiness = 100;
-  String? _pokemonImageUrl;
-  bool _isLoading = true;
-  String? _errorMessage;
+  late String _pokemonImageUrl;
 
   @override
   void initState() {
     super.initState();
-    _fetchRandomPokemon();
-  }
-
-  Future<void> _fetchRandomPokemon() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      final random = Random();
-      final pokemonId = random.nextInt(898) + 1; // There are 898 Pokémon as of Gen 8
-      final response = await http.get(Uri.parse('https://pokeapi.co/api/v2/pokemon/$pokemonId'));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          _pokemonImageUrl = data['sprites']['front_default'];
-          _solmateName = data['name'];
-          _isLoading = false;
-        });
-        _saveSolmateData();
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to load Pokémon: ${response.statusCode}';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error fetching Pokémon: $e';
-        _isLoading = false;
-      });
-    }
+    _solmateName = widget.solmateAnimal.name;
+    _pokemonImageUrl = widget.solmateAnimal.imageUrl;
+    _saveSolmateData();
   }
 
   Future<void> _saveSolmateData() async {
@@ -69,7 +38,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Solmate', style: TextStyle(color: Colors.white)),
+        title: Text('Your ${_solmateName.toUpperCase()}', style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF121212), // Very Dark Grey/Black
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white), // For back button
@@ -91,15 +60,14 @@ class _SolmateScreenState extends State<SolmateScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_isLoading)
-                  const CircularProgressIndicator(color: Color(0xFFBB86FC)) // Light Purple
-                else if (_errorMessage != null)
-                  Text(
-                    'Error: $_errorMessage',
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 16),
-                  )
-                else if (_pokemonImageUrl != null)
-                  _buildSolmateCard(),
+                _buildSolmateCard(),
+                const SizedBox(height: 20),
+                Text(
+                  '''Linked Wallet: 
+${widget.publicKey}''',
+                  style: const TextStyle(fontSize: 14, color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
@@ -129,7 +97,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(20.0),
             child: Image.network(
-              _pokemonImageUrl!,
+              _pokemonImageUrl,
               width: 180,
               height: 180,
               fit: BoxFit.cover,
