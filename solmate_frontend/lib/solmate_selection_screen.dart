@@ -64,59 +64,55 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        title: Text('Choose Your Solmate', style: TextStyle(color: colorScheme.onBackground)),
-        backgroundColor: colorScheme.background,
-        elevation: 0,
-        iconTheme: IconThemeData(color: colorScheme.onBackground),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colorScheme.background,
-              colorScheme.surface,
-            ],
+      body: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colorScheme.background,
+                colorScheme.surface,
+              ],
+            ),
           ),
-        ),
-        child: _availableChoices.isEmpty
-            ? Center(child: NesProgressBar(value: 0.5)) // Using NesPixelatedProgressBar
-            : Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    NesRunningText(
-                      text: 'Select your Solmate:',
-
-                     
-                    ),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 1,
-                          childAspectRatio: 1.5,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                        itemCount: _availableChoices.length,
-                        itemBuilder: (context, index) {
-                          final solmate = _availableChoices[index];
-                          return SolmateChoiceCard(
-                            solmate: solmate,
-                            onTap: () => _onSolmateSelected(solmate),
-                          );
-                        },
+          child: _availableChoices.isEmpty
+              ? Center(child: NesProgressBar(value: 0.5)) // Using NesPixelatedProgressBar
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      NesRunningText(
+                        text: 'Select your Solmate:',
+        
+                       
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    
-                  ],
+                      const SizedBox(height: 20),
+                      Expanded(
+                        child: GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 1,
+                            childAspectRatio: 1.75,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                          itemCount: _availableChoices.length,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final solmate = _availableChoices[index];
+                            return SolmateChoiceCard(
+                              solmate: solmate,
+                              onTap: () => _onSolmateSelected(solmate),
+                            );
+                          },
+                        ),
+                      ),
+                      
+                    ],
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }
@@ -135,7 +131,7 @@ class SolmateChoiceCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: NesContainer(
-        backgroundColor: colorScheme.surface, // Use surface color for card background
+        backgroundColor: colorScheme.surface,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
