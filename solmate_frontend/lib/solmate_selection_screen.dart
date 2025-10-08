@@ -40,23 +40,32 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
     _selectedPublicKey = _mockPublicKeys[random.nextInt(_mockPublicKeys.length)];
   }
 
-  void _onSolmateSelected(SolmateAnimal selectedSolmate) {
-    if (_selectedPublicKey != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SolmateHatchingScreen(
-            solmateAnimal: selectedSolmate,
-            publicKey: _selectedPublicKey!,
-          ),
-        ),
-      );
-    } else {
+  Future<void> _onSolmateSelected(SolmateAnimal selectedSolmate) async {
+    if (_selectedPublicKey == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: Public key not selected.', style: TextStyle(color: Theme.of(context).colorScheme.onError))),
+        SnackBar(content: Text('Error: Public key not selected.',
+          style: TextStyle(color: Theme.of(context).colorScheme.onError))),
       );
+      return;
     }
+
+    // Show the NES confirm dialog
+    final confirmed = await NesConfirmDialog.show(context: context);
+
+    if (confirmed != true) return;
+
+    // Proceed only after confirm
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SolmateHatchingScreen(
+          solmateAnimal: selectedSolmate,
+          publicKey: _selectedPublicKey!,
+        ),
+      ),
+    );
   }
+
 
   @override
   Widget build(BuildContext context) {

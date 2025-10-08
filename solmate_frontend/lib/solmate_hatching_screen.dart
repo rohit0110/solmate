@@ -17,9 +17,12 @@ class SolmateHatchingScreen extends StatefulWidget {
   State<SolmateHatchingScreen> createState() => _SolmateHatchingScreenState();
 }
 
-class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
+class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
   bool _isHatched = false;
+  bool _isMinting = false;
+  late final AnimationController _mintController;
+  double _mintProgress = 0.0;
 
   @override
   void initState() {
@@ -30,10 +33,30 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
         _isHatched = true;
       });
     });
+    _mintController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..addListener(() {
+        setState(() {
+          _mintProgress = _mintController.value;
+        });
+      })..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (_) => SolmateScreen(
+              solmateAnimal: widget.solmateAnimal,
+              publicKey: widget.publicKey,
+              solmateName: _nameController.text.trim(),
+            ),
+          ));
+        }
+      });
   }
 
   @override
   void dispose() {
+    _mintController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -41,19 +64,15 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
   void _confirmName() {
     final String solmateName = _nameController.text.trim();
     if (solmateName.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SolmateScreen(
-            solmateAnimal: widget.solmateAnimal,
-            publicKey: widget.publicKey,
-            solmateName: solmateName,
-          ),
-        ),
-      );
+      setState(() {
+        _isMinting = true;
+      });
+      // start the mint progress animation
+      _mintController.forward(from: 0.0);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: NesRunningText(text: "Please Give your Solmate a name!")),
+        SnackBar(
+            content: Text("Please Give your Solmate a name!")),
       );
     }
   }
@@ -96,11 +115,15 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                         height: 150,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.none,
-                        errorBuilder: (context, error, stackTrace) => NesContainer(
+                        errorBuilder: (context, error, stackTrace) =>
+                            NesContainer(
                           width: 150,
                           height: 150,
-                          backgroundColor: colorScheme.background, // Use background color for error placeholder
-                          child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+                          backgroundColor: colorScheme
+                              .background, // Use background color for error placeholder
+                          child: Icon(Icons.pets,
+                              size: 80,
+                              color: colorScheme.onBackground.withOpacity(0.5)),
                         ),
                       ),
                     ),
@@ -108,35 +131,55 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> {
                 ),
                 const SizedBox(height: 30),
                 if (_isHatched)
-                  Column(
-                    children: [
-                      Text(
-                        'Give your Solmate a name:',
-                        style: TextStyle(
-                          fontSize: 14,
-
-                          color: colorScheme.onBackground,
+                  _isMinting
+                      ? Column(
+                          children: [
+                            Text(
+                              'Minting your Solmate NFT...',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.onBackground,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            NesProgressBar(
+                              style: NesProgressBarStyle.pixel,
+                              label: "Minting progress",
+                              value: _mintProgress,
+                            )
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            Text(
+                              'Give your Solmate a name:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.onBackground,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: 200,
+                              // child: NesRunningText(text: "Enter Name"),
+                              child: TextField(
+                                controller: _nameController,
+                                textAlign: TextAlign.center,
+                                onSubmitted: (_) => _confirmName(),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            NesButton(
+                              type: NesButtonType.primary,
+                              onPressed: _confirmName,
+                              child: Text('Confirm Name',
+                                  style: TextStyle(
+                                      color: colorScheme.onPrimary)),
+                            ),
+                          ],
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        width: 200,
-                        // child: NesRunningText(text: "Enter Name"),
-                        child: TextField( 
-                          controller: _nameController,
-                          textAlign: TextAlign.center,
-                          onSubmitted: (_) => _confirmName(),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      NesButton(
-                        type: NesButtonType.primary,
-                        onPressed: _confirmName,
-                        child: Text('Confirm Name', style: TextStyle(color: colorScheme.onPrimary)),
-                      ),
-                    ],
-                  ),
               ],
             ),
           ),
