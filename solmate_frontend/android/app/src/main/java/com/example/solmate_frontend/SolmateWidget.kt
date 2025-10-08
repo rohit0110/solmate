@@ -43,16 +43,12 @@ internal fun updateAppWidget(
     widgetData: SharedPreferences
 ) {
     val solmateName = widgetData.getString("solmateName", "Solmate") ?: "Solmate"
-    val solmateHealth = widgetData.getInt("solmateHealth", 100)
-    val solmateHappiness = widgetData.getInt("solmateHappiness", 100)
     val solmateImageUrl = widgetData.getString("solmateImageUrl", null)
 
     // Construct the RemoteViews object
     val views = RemoteViews(context.packageName, R.layout.solmate_widget)
 
     views.setTextViewText(R.id.solmate_name, solmateName.replaceFirstChar { it.uppercase() })
-    views.setTextViewText(R.id.solmate_health, "Health: $solmateHealth")
-    views.setTextViewText(R.id.solmate_happiness, "Happiness: $solmateHappiness")
 
     // Load image in a background thread
     if (solmateImageUrl != null) {
