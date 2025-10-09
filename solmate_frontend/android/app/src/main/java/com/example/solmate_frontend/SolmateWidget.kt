@@ -43,25 +43,18 @@ internal fun updateAppWidget(
     widgetData: SharedPreferences
 ) {
     val solmateName = widgetData.getString("solmateName", "Solmate") ?: "Solmate"
-    val solmateImageUrl = widgetData.getString("solmateImageUrl", null)
+    val solmateImageBytes = widgetData.getString("solmateImageBytes", null)
 
     // Construct the RemoteViews object
     val views = RemoteViews(context.packageName, R.layout.solmate_widget)
 
     views.setTextViewText(R.id.solmate_name, solmateName.replaceFirstChar { it.uppercase() })
 
-    // Load image in a background thread
-    if (solmateImageUrl != null) {
-        thread {
-            try {
-                val url = URL(solmateImageUrl)
-                val bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-                views.setImageViewBitmap(R.id.solmate_image, bitmap)
-                appWidgetManager.updateAppWidget(appWidgetId, views)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+    if (solmateImageBytes != null) {
+        // Decode base64 string to ByteArray
+        val decodedBytes = android.util.Base64.decode(solmateImageBytes, android.util.Base64.DEFAULT)
+        val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        views.setImageViewBitmap(R.id.solmate_image, bitmap)
     } else {
         views.setImageViewResource(R.id.solmate_image, R.mipmap.ic_launcher)
     }
