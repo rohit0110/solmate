@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:nes_ui/nes_ui.dart'; // Added nes_ui import
+import 'package:solmate_frontend/run_game_screen.dart';
 import 'package:solmate_frontend/solmate_data.dart';
 
 class SolmateScreen extends StatefulWidget {
   final SolmateAnimal solmateAnimal;
-  final String publicKey;
   final String solmateName;
+  final String publicKey;
 
   const SolmateScreen({super.key, required this.solmateAnimal, required this.publicKey, required this.solmateName});
 
@@ -144,11 +145,25 @@ class _SolmateScreenState extends State<SolmateScreen> {
               padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
               color: colorScheme.background, // Use background color for console body
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _HardwareButton(icon: Icons.restaurant, label: 'Feed', onPressed: _feedSolmate),
                   _HardwareButton(icon: Icons.pets, label: 'Pet', onPressed: _petSolmate),
                   _HardwareButton(icon: Icons.tag_faces, label: 'Emote', onPressed: _emoteSolmate),
+                  _HardwareButton(
+                    icon: Icons.directions_run,
+                    label: 'Run',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RunGameScreen(
+                            solmateImagePath: widget.solmateAnimal.normalSpritePath,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
