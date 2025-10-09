@@ -1,0 +1,10 @@
+[] run_game_screen needs more robust logic for obstacles
+[] run_game_screen needs background ui in game screen
+[] run_game_screen needs something at bottom of screen which is empty
+[] add leaderboard with top scores in run_game_screen
+[] add market place
+[x] need to procedurally generate pixels on base sprite from pubkey in backend
+[] need to fix issue in widget not updating sprite
+[] add small buttons in widget to eat and shit
+[] fix solmate_screen widget heart and happiness to be pixelated
+[] share button to generate a card you can post on twitter etc
