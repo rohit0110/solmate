@@ -1,12 +1,18 @@
 
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
 
 class RunGameScreen extends StatefulWidget {
-  final String solmateImagePath;
+  final String? solmateImagePath;
+  final Uint8List? solmateImageBytes;
 
-  const RunGameScreen({super.key, required this.solmateImagePath});
+  const RunGameScreen({
+    super.key, 
+    this.solmateImagePath,
+    this.solmateImageBytes,
+  }) : assert(solmateImagePath != null || solmateImageBytes != null);
 
   @override
   State<RunGameScreen> createState() => _RunGameScreenState();
@@ -126,6 +132,13 @@ class _RunGameScreenState extends State<RunGameScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    ImageProvider imageProvider;
+    if (widget.solmateImageBytes != null) {
+      imageProvider = MemoryImage(widget.solmateImageBytes!);
+    } else {
+      imageProvider = AssetImage(widget.solmateImagePath!);
+    }
+
     return Scaffold(
       backgroundColor: colorScheme.background,
       body: GestureDetector(
@@ -147,8 +160,8 @@ class _RunGameScreenState extends State<RunGameScreen> {
                     Positioned(
                       left: 50,
                       bottom: groundHeight - playerY,
-                      child: Image.asset(
-                        widget.solmateImagePath,
+                      child: Image(
+                        image: imageProvider,
                         width: playerWidth,
                         height: playerHeight,
                         fit: BoxFit.contain,

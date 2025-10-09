@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
-import 'package:solmate_frontend/home_screen.dart';
-import 'package:solmate_frontend/solmate_selection_screen.dart';
+import 'package:solmate_frontend/screens/home_screen.dart';
+import 'package:solmate_frontend/screens/solmate_selection_screen.dart';
 // SolmateScreen is now pushed with arguments, no longer a direct named route
 // import 'package:solmate_frontend/solmate_screen.dart';
 

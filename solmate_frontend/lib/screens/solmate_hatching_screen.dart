@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:nes_ui/nes_ui.dart'; // Added nes_ui import
-import 'package:solmate_frontend/solmate_data.dart';
-import 'package:solmate_frontend/solmate_screen.dart';
+import 'package:nes_ui/nes_ui.dart';
+import 'package:solmate_frontend/api/solmate_api.dart';
+import 'package:solmate_frontend/screens/solmate_data.dart';
+import 'package:solmate_frontend/screens/solmate_screen.dart';
 
 class SolmateHatchingScreen extends StatefulWidget {
   final SolmateAnimal solmateAnimal;
@@ -23,15 +26,39 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
   bool _isMinting = false;
   late final AnimationController _mintController;
   double _mintProgress = 0.0;
+  Map<String, String>? _spriteData;
+  Uint8List? _normalSpriteBytes;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    if (widget.solmateAnimal.name == "Dragon") {
+      _isLoading = true;
+      SolmateApi.getDragonSprites(widget.publicKey).then((data) {
+        if (mounted) {
+          setState(() {
+            _spriteData = data;
+            _normalSpriteBytes = base64Decode(data['normal']!);
+            _isLoading = false;
+          });
+        }
+      }).catchError((error) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          // Optionally show an error message
+        }
+      });
+    }
     // Trigger the hatching animation after a short delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      setState(() {
-        _isHatched = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isHatched = true;
+        });
+      }
     });
     _mintController = AnimationController(
       vsync: this,
@@ -48,6 +75,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
               solmateAnimal: widget.solmateAnimal,
               publicKey: widget.publicKey,
               solmateName: _nameController.text.trim(),
+              solmateSprites: _spriteData,
             ),
           ));
         }
@@ -81,6 +109,61 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    Widget imageWidget;
+    if (widget.solmateAnimal.name == "Dragon") {
+      if (_isLoading) {
+        imageWidget = const NesProgressBar(value: 0.75,);
+      } else if (_normalSpriteBytes != null) {
+        imageWidget = Image.memory(
+          _normalSpriteBytes!,
+          width: 150,
+          height: 150,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.none,
+        );
+      } else {
+        // Error case
+        imageWidget = NesContainer(
+          width: 150,
+          height: 150,
+          backgroundColor: colorScheme.background,
+          child: Icon(Icons.error_outline, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+        );
+      }
+    } else {
+      if (widget.solmateAnimal.normalSpritePath.startsWith('http')) {
+        imageWidget = Image.network(
+          widget.solmateAnimal.normalSpritePath,
+          width: 150,
+          height: 150,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.none,
+          errorBuilder: (context, error, stackTrace) =>
+              NesContainer(
+                width: 150,
+                height: 150,
+                backgroundColor: colorScheme.background,
+                child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+              ),
+        );
+      } else {
+        imageWidget = Image.asset(
+          widget.solmateAnimal.normalSpritePath,
+          width: 150,
+          height: 150,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.none,
+          errorBuilder: (context, error, stackTrace) =>
+              NesContainer(
+                width: 150,
+                height: 150,
+                backgroundColor: colorScheme.background,
+                child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+              ),
+        );
+      }
+    }
+
     return Scaffold(
       backgroundColor: colorScheme.background, // Use background color from theme
       body: SafeArea(
@@ -109,23 +192,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
                     child: NesContainer(
                       padding: const EdgeInsets.all(16.0),
                       backgroundColor: colorScheme.surface, // Use surface color
-                      child: Image.asset(
-                        widget.solmateAnimal.normalSpritePath,
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.none,
-                        errorBuilder: (context, error, stackTrace) =>
-                            NesContainer(
-                          width: 150,
-                          height: 150,
-                          backgroundColor: colorScheme
-                              .background, // Use background color for error placeholder
-                          child: Icon(Icons.pets,
-                              size: 80,
-                              color: colorScheme.onBackground.withOpacity(0.5)),
-                        ),
-                      ),
+                      child: imageWidget,
                     ),
                   ),
                 ),

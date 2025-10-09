@@ -47,6 +47,36 @@ async function getOriginalColors(): Promise<FeatureColor[]> {
   return featureColors;
 }
 
+async function generateColoredSprite(
+  baseSpritePath: string, 
+  newFeatureColors: { [feature: string]: { r: number; g: number; b: number } },
+  originalFeatureColors: FeatureColor[]
+): Promise<Buffer> {
+  const image = sharp(baseSpritePath);
+  const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+
+  const originalColorMap = new Map<string, string>();
+  for (const fc of originalFeatureColors) {
+      originalColorMap.set(`${fc.originalColor.r},${fc.originalColor.g},${fc.originalColor.b}`, fc.feature);
+  }
+
+  for (let i = 0; i < data.length; i += info.channels) {
+    const r = data[i]!;
+    const g = data[i + 1]!;
+    const b = data[i + 2]!;
+    
+    const feature = originalColorMap.get(`${r},${g},${b}`);
+    if (feature) {
+      const newColor = newFeatureColors[feature];
+      data[i] = newColor!.r;
+      data[i+1] = newColor!.g;
+      data[i+2] = newColor!.b;
+    }
+  }
+  
+  return sharp(data, { raw: info }).png().toBuffer();
+}
+
 // --- Route ---
 
 router.get('/:pubkey', async (req, res) => {
@@ -64,7 +94,6 @@ router.get('/:pubkey', async (req, res) => {
     let hash = crypto.createHash('sha256').update(pubkey).digest();
 
     for (const featureColor of originalFeatureColors) {
-        // Use parts of the hash to generate a color. Re-hash to get more bytes if needed.
         if (hash.length < 3) {
             hash = crypto.createHash('sha256').update(hash).digest();
         }
@@ -76,36 +105,20 @@ router.get('/:pubkey', async (req, res) => {
         hash = hash.subarray(3);
     }
 
-    // 3. Image Manipulation
-    const baseSpritePath = path.join(__dirname, '..', 'assets', 'dragon_normal.png');
+    // 3. Generate both sprites in parallel
+    const normalSpritePath = path.join(__dirname, '..', 'assets', 'dragon_normal.png');
+    const happySpritePath = path.join(__dirname, '..', 'assets', 'dragon_happy.png');
 
-    const image = sharp(baseSpritePath);
-    const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+    const [normalSpriteBuffer, happySpriteBuffer] = await Promise.all([
+      generateColoredSprite(normalSpritePath, newFeatureColors, originalFeatureColors),
+      generateColoredSprite(happySpritePath, newFeatureColors, originalFeatureColors)
+    ]);
 
-    // Create a map of original colors for quick lookup
-    const originalColorMap = new Map<string, string>(); // "r,g,b" -> feature name
-    for (const fc of originalFeatureColors) {
-        originalColorMap.set(`${fc.originalColor.r},${fc.originalColor.g},${fc.originalColor.b}`, fc.feature);
-    }
-
-    for (let i = 0; i < data.length; i += info.channels) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      
-      const feature = originalColorMap.get(`${r},${g},${b}`);
-      if (feature) {
-        const newColor = newFeatureColors[feature];
-        data[i] = newColor!.r;
-        data[i+1] = newColor!.g;
-        data[i+2] = newColor!.b;
-      }
-    }
-    
-    const outputImage = await sharp(data, { raw: info }).png().toBuffer();
-
-    res.set('Content-Type', 'image/png');
-    res.send(outputImage);
+    // 4. Send JSON response with Base64 encoded images
+    res.json({
+      normal: normalSpriteBuffer.toString('base64'),
+      happy: happySpriteBuffer.toString('base64'),
+    });
 
   } catch (error) {
     console.error(error);

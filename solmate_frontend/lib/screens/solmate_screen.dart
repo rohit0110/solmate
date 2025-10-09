@@ -1,15 +1,24 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:nes_ui/nes_ui.dart'; // Added nes_ui import
-import 'package:solmate_frontend/run_game_screen.dart';
-import 'package:solmate_frontend/solmate_data.dart';
+import 'package:nes_ui/nes_ui.dart';
+import 'package:solmate_frontend/screens/run_game_screen.dart';
+import 'package:solmate_frontend/screens/solmate_data.dart';
 
 class SolmateScreen extends StatefulWidget {
   final SolmateAnimal solmateAnimal;
   final String solmateName;
   final String publicKey;
+  final Map<String, String>? solmateSprites; // Added this
 
-  const SolmateScreen({super.key, required this.solmateAnimal, required this.publicKey, required this.solmateName});
+  const SolmateScreen({
+    super.key,
+    required this.solmateAnimal,
+    required this.publicKey,
+    required this.solmateName,
+    this.solmateSprites, // Added this
+  });
 
   @override
   State<SolmateScreen> createState() => _SolmateScreenState();
@@ -19,15 +28,23 @@ class _SolmateScreenState extends State<SolmateScreen> {
   late String _solmateNameDisplay;
   int _health = 100;
   int _happiness = 100;
-  bool _isHappy = false; // New state variable
-  late String _pokemonImageUrl;
-  String _message = "Welcome to your Solmate!"; // Initial message
+  bool _isHappy = false;
+  String _message = "Welcome to your Solmate!";
+
+  // For unique sprites
+  Uint8List? _normalSpriteBytes;
+  Uint8List? _happySpriteBytes;
 
   @override
   void initState() {
     super.initState();
     _solmateNameDisplay = widget.solmateName;
-    _pokemonImageUrl = widget.solmateAnimal.normalSpritePath;
+
+    if (widget.solmateSprites != null) {
+      _normalSpriteBytes = base64Decode(widget.solmateSprites!['normal']!);
+      _happySpriteBytes = base64Decode(widget.solmateSprites!['happy']!);
+    }
+
     _saveSolmateData();
   }
 
@@ -35,12 +52,16 @@ class _SolmateScreenState extends State<SolmateScreen> {
     await HomeWidget.saveWidgetData<String>('solmateName', _solmateNameDisplay);
     await HomeWidget.saveWidgetData<int>('solmateHealth', _health);
     await HomeWidget.saveWidgetData<int>('solmateHappiness', _happiness);
-    // Save the currently displayed image URL
-    await HomeWidget.saveWidgetData<String>('solmateImageUrl', 
-      widget.solmateAnimal.name == "Dragon" && _isHappy
-          ? widget.solmateAnimal.happySpritePath
-          : widget.solmateAnimal.normalSpritePath
-    );
+    
+    // TODO: Handle saving generated sprite to home widget. 
+    // Base64 strings might be too large for widget data.
+    if (widget.solmateAnimal.name != "Dragon") {
+       await HomeWidget.saveWidgetData<String>('solmateImageUrl', 
+        _isHappy
+            ? widget.solmateAnimal.happySpritePath
+            : widget.solmateAnimal.normalSpritePath
+      );
+    }
     await HomeWidget.updateWidget(name: 'SolmateWidget');
   }
 
@@ -89,13 +110,21 @@ class _SolmateScreenState extends State<SolmateScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (widget.solmateAnimal.name == "Dragon")
-                        Image.asset(
-                          _isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
+                      if (widget.solmateAnimal.name == "Dragon" && _normalSpriteBytes != null)
+                        Image.memory(
+                          _isHappy ? _happySpriteBytes! : _normalSpriteBytes!,
                           width: 150,
                           height: 150,
                           fit: BoxFit.contain,
                           filterQuality: FilterQuality.none,
+                        )
+                      else if (widget.solmateAnimal.normalSpritePath.startsWith('http'))
+                        Image.network(
+                          widget.solmateAnimal.normalSpritePath,
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.none, // For pixelated look
                           errorBuilder: (context, error, stackTrace) => NesContainer(
                             width: 150,
                             height: 150,
@@ -103,13 +132,13 @@ class _SolmateScreenState extends State<SolmateScreen> {
                             child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
                           ),
                         )
-                      else
-                        Image.network(
-                          widget.solmateAnimal.normalSpritePath,
+                      else // Fallback for original dragon asset if sprites fail to load
+                        Image.asset(
+                          _isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
                           width: 150,
                           height: 150,
                           fit: BoxFit.contain,
-                          filterQuality: FilterQuality.none, // For pixelated look
+                          filterQuality: FilterQuality.none,
                           errorBuilder: (context, error, stackTrace) => NesContainer(
                             width: 150,
                             height: 150,
@@ -158,7 +187,12 @@ class _SolmateScreenState extends State<SolmateScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RunGameScreen(
-                            solmateImagePath: widget.solmateAnimal.normalSpritePath,
+                            solmateImageBytes: widget.solmateAnimal.name == "Dragon" 
+                                ? _normalSpriteBytes 
+                                : null,
+                            solmateImagePath: widget.solmateAnimal.name != "Dragon" 
+                                ? widget.solmateAnimal.normalSpritePath 
+                                : null,
                           ),
                         ),
                       );

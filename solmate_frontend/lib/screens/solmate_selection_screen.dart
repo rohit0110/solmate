@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:nes_ui/nes_ui.dart'; // Added nes_ui import
-import 'package:solmate_frontend/solmate_data.dart';
-import 'package:solmate_frontend/solmate_hatching_screen.dart';
+import 'package:solmate_frontend/screens/solmate_data.dart';
+import 'package:solmate_frontend/screens/solmate_hatching_screen.dart';
 
 class SolmateSelectionScreen extends StatefulWidget {
   const SolmateSelectionScreen({super.key});
