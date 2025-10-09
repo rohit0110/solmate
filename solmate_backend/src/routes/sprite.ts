@@ -26,15 +26,21 @@ interface FeatureColor {
   originalColor: { r: number; g: number; b: number };
 }
 
-async function getOriginalColors(): Promise<FeatureColor[]> {
+async function getOriginalColors(animal: string): Promise<FeatureColor[]> {
   const colorFilePath = path.join(__dirname, '..', 'assets', 'colors.md');
   const colorFile = await fs.readFile(colorFilePath, 'utf-8');
   const lines = colorFile.split('\n');
   
   const featureColors: FeatureColor[] = [];
-  
+  let inCorrectSection = false;
+  const sectionHeader = `### ${animal.toUpperCase()}`;
+
   for (const line of lines) {
-    if (line.includes('- #')) {
+    if (line.startsWith('###')) { // A new animal section starts
+        inCorrectSection = line.trim() === sectionHeader;
+    }
+    
+    if (inCorrectSection && line.includes('- #')) {
       const parts = line.split('-');
       const feature = parts[0]!.trim();
       const hex = parts[1]!.trim();
@@ -79,14 +85,14 @@ async function generateColoredSprite(
 
 // --- Route ---
 
-router.get('/:pubkey', async (req, res) => {
+router.get('/:animal/:pubkey', async (req, res) => {
   try {
-    const { pubkey } = req.params;
+    const { animal, pubkey } = req.params;
 
     // 1. Get original feature colors
-    const originalFeatureColors = await getOriginalColors();
+    const originalFeatureColors = await getOriginalColors(animal);
     if (originalFeatureColors.length === 0) {
-      throw new Error('Could not parse feature colors from colors.md');
+      throw new Error(`Could not parse feature colors for ${animal} from colors.md`);
     }
 
     // 2. Deterministically generate new colors for each feature
@@ -106,8 +112,15 @@ router.get('/:pubkey', async (req, res) => {
     }
 
     // 3. Generate both sprites in parallel
-    const normalSpritePath = path.join(__dirname, '..', 'assets', 'dragon_normal.png');
-    const happySpritePath = path.join(__dirname, '..', 'assets', 'dragon_happy.png');
+    const normalSpritePath = path.join(__dirname, '..', 'assets', `${animal}_normal.png`);
+    const happySpritePath = path.join(__dirname, '..', 'assets', `${animal}_happy.png`);
+
+    try {
+        await fs.access(normalSpritePath);
+        await fs.access(happySpritePath);
+    } catch (e) {
+        return res.status(404).send(`Sprites for animal '${animal}' not found.`);
+    }
 
     const [normalSpriteBuffer, happySpriteBuffer] = await Promise.all([
       generateColoredSprite(normalSpritePath, newFeatureColors, originalFeatureColors),

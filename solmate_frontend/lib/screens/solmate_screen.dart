@@ -55,7 +55,13 @@ class _SolmateScreenState extends State<SolmateScreen> {
     
     // TODO: Handle saving generated sprite to home widget. 
     // Base64 strings might be too large for widget data.
-    if (widget.solmateAnimal.name != "Dragon") {
+    if (_normalSpriteBytes != null) {
+      await HomeWidget.saveWidgetData<String>('solmateImageBytes', 
+        _isHappy
+            ? base64Encode(_happySpriteBytes!)
+            : base64Encode(_normalSpriteBytes!)
+      );
+    } else {
        await HomeWidget.saveWidgetData<String>('solmateImageUrl', 
         _isHappy
             ? widget.solmateAnimal.happySpritePath
@@ -110,7 +116,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (widget.solmateAnimal.name == "Dragon" && _normalSpriteBytes != null)
+                      if (_normalSpriteBytes != null)
                         Image.memory(
                           _isHappy ? _happySpriteBytes! : _normalSpriteBytes!,
                           width: 150,
@@ -120,7 +126,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                         )
                       else if (widget.solmateAnimal.normalSpritePath.startsWith('http'))
                         Image.network(
-                          widget.solmateAnimal.normalSpritePath,
+                          _isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
                           width: 150,
                           height: 150,
                           fit: BoxFit.contain,
@@ -187,10 +193,8 @@ class _SolmateScreenState extends State<SolmateScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RunGameScreen(
-                            solmateImageBytes: widget.solmateAnimal.name == "Dragon" 
-                                ? _normalSpriteBytes 
-                                : null,
-                            solmateImagePath: widget.solmateAnimal.name != "Dragon" 
+                            solmateImageBytes: _normalSpriteBytes,
+                            solmateImagePath: _normalSpriteBytes == null 
                                 ? widget.solmateAnimal.normalSpritePath 
                                 : null,
                           ),

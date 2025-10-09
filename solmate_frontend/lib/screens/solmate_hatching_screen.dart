@@ -33,25 +33,23 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
   @override
   void initState() {
     super.initState();
-    if (widget.solmateAnimal.name == "Dragon") {
-      _isLoading = true;
-      SolmateApi.getDragonSprites(widget.publicKey).then((data) {
-        if (mounted) {
-          setState(() {
-            _spriteData = data;
-            _normalSpriteBytes = base64Decode(data['normal']!);
-            _isLoading = false;
-          });
-        }
-      }).catchError((error) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          // Optionally show an error message
-        }
-      });
-    }
+    _isLoading = true;
+    SolmateApi.getSprites(widget.solmateAnimal.name, widget.publicKey).then((data) {
+      if (mounted) {
+        setState(() {
+          _spriteData = data;
+          _normalSpriteBytes = base64Decode(data['normal']!);
+          _isLoading = false;
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // Optionally show an error message
+      }
+    });
     // Trigger the hatching animation after a short delay
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
@@ -110,58 +108,46 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
     final colorScheme = Theme.of(context).colorScheme;
 
     Widget imageWidget;
-    if (widget.solmateAnimal.name == "Dragon") {
-      if (_isLoading) {
-        imageWidget = const NesProgressBar(value: 0.75,);
-      } else if (_normalSpriteBytes != null) {
-        imageWidget = Image.memory(
-          _normalSpriteBytes!,
-          width: 150,
-          height: 150,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.none,
-        );
-      } else {
-        // Error case
-        imageWidget = NesContainer(
-          width: 150,
-          height: 150,
-          backgroundColor: colorScheme.background,
-          child: Icon(Icons.error_outline, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
-        );
-      }
+    if (_isLoading) {
+      imageWidget = const NesProgressBar(value: 0.75,);
+    } else if (_normalSpriteBytes != null)
+      imageWidget = Image.memory(
+        _normalSpriteBytes!,
+        width: 150,
+        height: 150,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+      );
+    else if (widget.solmateAnimal.normalSpritePath.startsWith('http')) {
+      imageWidget = Image.network(
+        widget.solmateAnimal.normalSpritePath,
+        width: 150,
+        height: 150,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+        errorBuilder: (context, error, stackTrace) =>
+            NesContainer(
+              width: 150,
+              height: 150,
+              backgroundColor: colorScheme.background,
+              child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+            ),
+      );
     } else {
-      if (widget.solmateAnimal.normalSpritePath.startsWith('http')) {
-        imageWidget = Image.network(
-          widget.solmateAnimal.normalSpritePath,
-          width: 150,
-          height: 150,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.none,
-          errorBuilder: (context, error, stackTrace) =>
-              NesContainer(
-                width: 150,
-                height: 150,
-                backgroundColor: colorScheme.background,
-                child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
-              ),
-        );
-      } else {
-        imageWidget = Image.asset(
-          widget.solmateAnimal.normalSpritePath,
-          width: 150,
-          height: 150,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.none,
-          errorBuilder: (context, error, stackTrace) =>
-              NesContainer(
-                width: 150,
-                height: 150,
-                backgroundColor: colorScheme.background,
-                child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
-              ),
-        );
-      }
+      imageWidget = Image.asset(
+        widget.solmateAnimal.normalSpritePath,
+        width: 150,
+        height: 150,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+        errorBuilder: (context, error, stackTrace) =>
+            NesContainer(
+              width: 150,
+              height: 150,
+              backgroundColor: colorScheme.background,
+              child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+            ),
+      );
     }
 
     return Scaffold(

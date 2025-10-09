@@ -144,8 +144,8 @@ class SolmateChoiceCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (solmate.name == "Dragon")
-              Image.asset(
+            if (solmate.normalSpritePath.startsWith('http'))
+              Image.network(
                 solmate.normalSpritePath,
                 width: 100,
                 height: 100,
@@ -158,7 +158,7 @@ class SolmateChoiceCard extends StatelessWidget {
                 ),
               )
             else
-              Image.network(
+              Image.asset(
                 solmate.normalSpritePath,
                 width: 100,
                 height: 100,
