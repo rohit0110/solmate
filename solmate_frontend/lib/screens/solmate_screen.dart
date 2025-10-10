@@ -181,11 +181,12 @@ class _SolmateScreenState extends State<SolmateScreen> {
                       return Stack( // New Stack for layering
                         children: [
                           // Background Layer (single sprite for the entire grid)
-                          Container(
+                          Image.asset(
+                            'assets/sprites/background.png', // Path to the new background image
                             width: gridDisplaySize,
                             height: gridDisplaySize,
-                            color: Colors.grey[800], // Placeholder background color
-                            // Or Image.asset('path/to/background_sprite.png', fit: BoxFit.cover),
+                            fit: BoxFit.cover, // Cover the entire grid area
+                            filterQuality: FilterQuality.none, // For pixel art style
                           ),
 
                           // Grid Layer (Column of Rows)
