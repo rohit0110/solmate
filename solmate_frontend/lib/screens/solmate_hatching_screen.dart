@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
+import 'package:solmate_frontend/api/sprite_api.dart';
 import 'package:solmate_frontend/api/solmate_api.dart';
 import 'package:solmate_frontend/screens/solmate_data.dart';
 import 'package:solmate_frontend/screens/solmate_screen.dart';
@@ -21,6 +22,7 @@ class SolmateHatchingScreen extends StatefulWidget {
 }
 
 class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with SingleTickerProviderStateMixin {
+  final SolmateBackendApi _api = SolmateBackendApi();
   final TextEditingController _nameController = TextEditingController();
   bool _isHatched = false;
   bool _isMinting = false;
@@ -60,7 +62,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
     });
     _mintController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 1), //CHANGE
     )..addListener(() {
         setState(() {
           _mintProgress = _mintController.value;
@@ -87,17 +89,31 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
     super.dispose();
   }
 
-  void _confirmName() {
+  void _confirmName() async {
     final String solmateName = _nameController.text.trim();
     if (solmateName.isNotEmpty) {
       setState(() {
         _isMinting = true;
       });
-      // start the mint progress animation
-      _mintController.forward(from: 0.0);
+
+      try {
+        await _api.createSolmate(widget.publicKey, solmateName);
+        // If successful, start the animation.
+        _mintController.forward(from: 0.0);
+      } catch (e) {
+        // Handle error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to create Solmate: $e')),
+          );
+          setState(() {
+            _isMinting = false;
+          });
+        }
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
             content: Text("Please Give your Solmate a name!")),
       );
     }

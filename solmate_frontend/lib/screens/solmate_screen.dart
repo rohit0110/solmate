@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'dart:math'; // New import for min
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:nes_ui/nes_ui.dart';
+import 'package:solmate_frontend/api/solmate_api.dart';
 import 'package:solmate_frontend/screens/run_game_screen.dart';
 import 'package:solmate_frontend/screens/solmate_data.dart';
-import 'package:solmate_frontend/screens/marketplace_screen.dart'; // New import
+import 'package:solmate_frontend/screens/marketplace_screen.dart';
 
 class SolmateScreen extends StatefulWidget {
   final SolmateAnimal solmateAnimal;
@@ -27,11 +28,13 @@ class SolmateScreen extends StatefulWidget {
 }
 
 class _SolmateScreenState extends State<SolmateScreen> {
+  final SolmateBackendApi _api = SolmateBackendApi();
   late String _solmateNameDisplay;
   int _health = 100;
   int _happiness = 100;
   bool _isHappy = false;
   String _message = "Welcome to your Solmate!";
+  bool _isLoading = true;
 
   // For unique sprites
   Uint8List? _normalSpriteBytes;
@@ -50,6 +53,25 @@ class _SolmateScreenState extends State<SolmateScreen> {
       _happySpriteBytes = base64Decode(widget.solmateSprites!['happy']!);
     }
 
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      final data = await _api.getSolmateData(widget.publicKey);
+      setState(() {
+        _health = data!['health'];
+        _happiness = data['happiness'];
+        _solmateNameDisplay = data['name'] ?? widget.solmateName;
+        _message = "Your Solmate is ready!";
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _message = "Error loading data: $e";
+        _isLoading = false;
+      });
+    }
     _saveSolmateData();
   }
 
@@ -76,20 +98,40 @@ class _SolmateScreenState extends State<SolmateScreen> {
     await HomeWidget.updateWidget(name: 'SolmateWidget');
   }
 
-  void _feedSolmate() {
+  void _feedSolmate() async {
     setState(() {
-      _health = (_health + 10).clamp(0, 100);
-      _happiness = (_happiness + 5).clamp(0, 100);
-      _message = "You fed your Solmate!";
+      _message = "Feeding your Solmate...";
     });
+    try {
+      final data = await _api.feedSolmate(widget.publicKey);
+      setState(() {
+        _health = data['health'];
+        _happiness = data['happiness'];
+        _message = "You fed your Solmate!";
+      });
+    } catch (e) {
+      setState(() {
+        _message = "Failed to feed: $e";
+      });
+    }
     _saveSolmateData();
   }
 
-  void _petSolmate() {
+  void _petSolmate() async {
     setState(() {
-      _happiness = (_happiness + 15).clamp(0, 100);
-      _message = "You pet your Solmate!";
+      _message = "Petting your Solmate...";
     });
+    try {
+      final data = await _api.petSolmate(widget.publicKey);
+      setState(() {
+        _happiness = data['happiness'];
+        _message = "You pet your Solmate!";
+      });
+    } catch (e) {
+      setState(() {
+        _message = "Failed to pet: $e";
+      });
+    }
     _saveSolmateData();
   }
 
@@ -160,137 +202,165 @@ class _SolmateScreenState extends State<SolmateScreen> {
     return Scaffold(
       backgroundColor: colorScheme.background, // Use background color from theme
       body: SafeArea(
-        child: Column(
-          children: [
-            SizedBox(
-              height: nesContainerOuterDimension + (2 * 8.0), // Add back the outer padding
-              width: nesContainerOuterDimension + (2 * 8.0), // Add back the outer padding
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: NesContainer(
-                  padding: const EdgeInsets.all(16.0), // Reverted padding
-                  label: _solmateNameDisplay.toUpperCase(),
-                  backgroundColor: colorScheme.surface,
-                  painterBuilder: NesContainerSquareCornerPainter.new,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      // constraints.maxWidth and constraints.maxHeight will now be nesContainerOuterDimension - (2 * 16.0)
-                      final gridDisplaySize = min(constraints.maxWidth, constraints.maxHeight); // Should be equal
-                      final cellSize = gridDisplaySize / 3;
-
-                      return Stack( // New Stack for layering
-                        children: [
-                          // Background Layer (single sprite for the entire grid)
-                          Image.asset(
-                            'assets/sprites/background.png', // Path to the new background image
-                            width: gridDisplaySize,
-                            height: gridDisplaySize,
-                            fit: BoxFit.cover, // Cover the entire grid area
-                            filterQuality: FilterQuality.none, // For pixel art style
-                          ),
-
-                          // Grid Layer (Column of Rows)
-                          Column( // No need for Center or SizedBox here, it will fill LayoutBuilder
-                            children: List.generate(3, (row) {
-                              return Row(
-                                children: List.generate(3, (col) {
-                                  return Container(
-                                    width: cellSize,
-                                    height: cellSize,
-                                    decoration: BoxDecoration(
-                                      // Removed: color: backgroundColor,
-                                      // Individual cells are now transparent to show the single background
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        // Accessories layer
-                                        if (_accessoryGrid[row][col] && !(row == 2 && col == 1))
-                                          Center(
-                                            child: _buildSolmateImage(cellSize * 0.8), // Accessory
-                                          ),
-
-                                        // Solmate layer (only at [2][1])
-                                        if (row == 2 && col == 1)
-                                          Center(
-                                            child: _buildSolmateImage(cellSize * 0.9, isHappy: _isHappy), // Solmate
-                                          ),
-                                      ],
-                                    ),
-                                  );
-                                }),
-                              );
-                            }),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20), // Spacing between card and message
-            // Message display area
-            NesRunningText(text: _message),
-            const Spacer(),
-            // Hardware-like buttons
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
-              color: colorScheme.background, // Use background color for console body
-              child: Column( // Changed from Row to Column
+        child: _isLoading
+            ? const Center(child: Text("Loading..."))
+            : Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _HardwareButton(icon: Icons.restaurant, label: 'Feed', onPressed: _feedSolmate),
-                      _HardwareButton(icon: Icons.pets, label: 'Pet', onPressed: _petSolmate),
-                      _HardwareButton(icon: Icons.tag_faces, label: 'Emote', onPressed: _emoteSolmate),
-                    ],
+                  SizedBox(
+                    height: nesContainerOuterDimension + (2 * 8.0), // Add back the outer padding
+                    width: nesContainerOuterDimension + (2 * 8.0), // Add back the outer padding
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: NesContainer(
+                        padding: const EdgeInsets.all(16.0), // Reverted padding
+                        label: _solmateNameDisplay.toUpperCase(),
+                        backgroundColor: colorScheme.surface,
+                        painterBuilder: NesContainerSquareCornerPainter.new,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // constraints.maxWidth and constraints.maxHeight will now be nesContainerOuterDimension - (2 * 16.0)
+                            final gridDisplaySize = min(constraints.maxWidth, constraints.maxHeight); // Should be equal
+                            final cellSize = gridDisplaySize / 3;
+
+                            return Stack( // New Stack for layering
+                              children: [
+                                // Background Layer (single sprite for the entire grid)
+                                Image.asset(
+                                  'assets/sprites/background.png', // Path to the new background image
+                                  width: gridDisplaySize,
+                                  height: gridDisplaySize,
+                                  fit: BoxFit.cover, // Cover the entire grid area
+                                  filterQuality: FilterQuality.none, // For pixel art style
+                                ),
+
+                                // Grid Layer (Column of Rows)
+                                Column( // No need for Center or SizedBox here, it will fill LayoutBuilder
+                                  children: List.generate(3, (row) {
+                                    return Row(
+                                      children: List.generate(3, (col) {
+                                        return Container(
+                                          width: cellSize,
+                                          height: cellSize,
+                                          decoration: BoxDecoration(
+                                            // Removed: color: backgroundColor,
+                                            // Individual cells are now transparent to show the single background
+                                          ),
+                                          child: Stack(
+                                            children: [
+                                              // Accessories layer
+                                              if (_accessoryGrid[row][col] && !(row == 2 && col == 1))
+                                                Center(
+                                                  child: _buildSolmateImage(cellSize * 0.8), // Accessory
+                                                ),
+
+                                              // Solmate layer (only at [2][1])
+                                              if (row == 2 && col == 1)
+                                                Center(
+                                                  child: _buildSolmateImage(cellSize * 0.9, isHappy: _isHappy), // Solmate
+                                                ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 20), // Spacing between rows
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _HardwareButton(
-                        icon: Icons.shopping_cart, // New icon for marketplace
-                        label: 'Shop', // New label
-                        onPressed: () async {
-                          final updatedGrid = await Navigator.push<List<List<bool>>>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MarketplaceScreen(initialAccessoryGrid: _accessoryGrid),
+                  const SizedBox(height: 20), // Spacing between card and message
+                  // New: Hunger and Happiness display
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Happiness (Heart icon and happiness value)
+                        Row(
+                          children: [
+                            Icon(Icons.sentiment_satisfied_alt, color: colorScheme.tertiary, size: 24), // Changed from NesIcon.heart
+                            const SizedBox(width: 8),
+                            Text('$_happiness', style: TextStyle(fontSize: 18, color: colorScheme.onBackground)),
+                          ],
+                        ),
+                        // Hunger (Apple icon and health value)
+                        Row(
+                          children: [
+                            NesIcon(iconData: NesIcons.apple),
+                            const SizedBox(width: 8),
+                            Text('$_health', style: TextStyle(fontSize: 18, color: colorScheme.onBackground)),
+                          ],
+                        ), 
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20), // Add spacing after stats row
+                  // Message display area
+                  NesRunningText(text: _message),
+                  const Spacer(),
+                  // Hardware-like buttons
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
+                    color: colorScheme.background, // Use background color for console body
+                    child: Column( // Changed from Row to Column
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _HardwareButton(icon: Icons.restaurant, label: 'Feed', onPressed: _feedSolmate),
+                            _HardwareButton(icon: Icons.pets, label: 'Pet', onPressed: _petSolmate),
+                            _HardwareButton(icon: Icons.tag_faces, label: 'Emote', onPressed: _emoteSolmate),
+                          ],
+                        ),
+                        const SizedBox(height: 20), // Spacing between rows
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _HardwareButton(
+                              icon: Icons.shopping_cart, // New icon for marketplace
+                              label: 'Shop', // New label
+                              onPressed: () async {
+                                final updatedGrid = await Navigator.push<List<List<bool>>>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MarketplaceScreen(initialAccessoryGrid: _accessoryGrid),
+                                  ),
+                                );
+                                if (updatedGrid != null) {
+                                  setState(() {
+                                    _accessoryGrid = updatedGrid;
+                                  });
+                                }
+                              },
                             ),
-                          );
-                          if (updatedGrid != null) {
-                            setState(() {
-                              _accessoryGrid = updatedGrid;
-                            });
-                          }
-                        },
-                      ),
-                      _HardwareButton(
-                        icon: Icons.directions_run,
-                        label: 'Run',
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RunGameScreen(
-                                solmateImageBytes: _normalSpriteBytes,
-                                solmateImagePath: _normalSpriteBytes == null
-                                    ? widget.solmateAnimal.normalSpritePath
-                                    : null,
-                              ),
+                            _HardwareButton(
+                              icon: Icons.directions_run,
+                              label: 'Run',
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RunGameScreen(
+                                      solmateImageBytes: _normalSpriteBytes,
+                                      solmateImagePath: _normalSpriteBytes == null
+                                          ? widget.solmateAnimal.normalSpritePath
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

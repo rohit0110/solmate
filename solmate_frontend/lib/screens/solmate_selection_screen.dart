@@ -15,17 +15,20 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
   List<SolmateAnimal> _availableChoices = [];
   String? _selectedPublicKey;
 
-  final List<String> _mockPublicKeys = [
-    "0x1A2b3C4d5E6f7A8b9C0d1E2f3A4b5C6d7E8f9A0b",
-    "0x9F8e7D6c5B4a3F2e1D0c9B8a7F6e5D4c3B2a1F0e",
-    "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
-  ];
-
   @override
   void initState() {
     super.initState();
     _generateRandomChoices();
-    _selectRandomPublicKey();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final pubkey = ModalRoute.of(context)?.settings.arguments as String?;
+    if (pubkey != null) {
+      _selectedPublicKey = pubkey;
+    }
+    // If pubkey is null, it will be handled in _onSolmateSelected
   }
 
   void _generateRandomChoices() {
@@ -33,11 +36,6 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
     final List<SolmateAnimal> allAnimals = List.from(solmateAnimals);
     allAnimals.shuffle(random);
     _availableChoices = allAnimals.take(3).toList();
-  }
-
-  void _selectRandomPublicKey() {
-    final random = Random();
-    _selectedPublicKey = _mockPublicKeys[random.nextInt(_mockPublicKeys.length)];
   }
 
   Future<void> _onSolmateSelected(SolmateAnimal selectedSolmate) async {
