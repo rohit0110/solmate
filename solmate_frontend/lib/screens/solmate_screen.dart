@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:math'; // New import for min
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:nes_ui/nes_ui.dart';
 import 'package:solmate_frontend/screens/run_game_screen.dart';
 import 'package:solmate_frontend/screens/solmate_data.dart';
+import 'package:solmate_frontend/screens/marketplace_screen.dart'; // New import
 
 class SolmateScreen extends StatefulWidget {
   final SolmateAnimal solmateAnimal;
@@ -34,6 +36,9 @@ class _SolmateScreenState extends State<SolmateScreen> {
   // For unique sprites
   Uint8List? _normalSpriteBytes;
   Uint8List? _happySpriteBytes;
+
+  // New state for accessories
+  List<List<bool>> _accessoryGrid = List.generate(3, (_) => List.generate(3, (_) => false));
 
   @override
   void initState() {
@@ -96,77 +101,128 @@ class _SolmateScreenState extends State<SolmateScreen> {
     _saveSolmateData();
   }
 
+  // New helper function for building solmate/accessory images
+  Widget _buildSolmateImage(double size, {bool isHappy = false}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    if (_normalSpriteBytes != null) {
+      return Image.memory(
+        isHappy ? _happySpriteBytes! : _normalSpriteBytes!,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+      );
+    } else if (widget.solmateAnimal.normalSpritePath.startsWith('http')) {
+      return Image.network(
+        isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+        errorBuilder: (context, error, stackTrace) => NesContainer(
+          width: size,
+          height: size,
+          backgroundColor: colorScheme.background,
+          child: Icon(Icons.pets, size: size * 0.5, color: colorScheme.onBackground.withOpacity(0.5)),
+        ),
+      );
+    }
+    else {
+      return Image.asset(
+        isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+        errorBuilder: (context, error, stackTrace) => NesContainer(
+          width: size,
+          height: size,
+          backgroundColor: colorScheme.background,
+          child: Icon(Icons.pets, size: size * 0.5, color: colorScheme.onBackground.withOpacity(0.5)),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Calculate available space for the NesContainer after outer padding
+    final containerAvailableWidth = screenWidth - (2 * 8.0); // 8.0 is padding from outer Padding
+    final containerAvailableHeight = (screenHeight * 0.6) - (2 * 8.0);
+    
+    // Determine the largest square dimension for the NesContainer
+    final nesContainerOuterDimension = min(containerAvailableWidth, containerAvailableHeight);
 
     return Scaffold(
       backgroundColor: colorScheme.background, // Use background color from theme
       body: SafeArea(
         child: Column(
           children: [
-            Center(
+            SizedBox(
+              height: nesContainerOuterDimension + (2 * 8.0), // Add back the outer padding
+              width: nesContainerOuterDimension + (2 * 8.0), // Add back the outer padding
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: NesContainer(
-                  padding: const EdgeInsets.all(16.0),
-                  label: "solmate",
-                  backgroundColor: colorScheme.surface, // Use surface color for display area
+                  padding: const EdgeInsets.all(16.0), // Reverted padding
+                  label: _solmateNameDisplay.toUpperCase(),
+                  backgroundColor: colorScheme.surface,
                   painterBuilder: NesContainerSquareCornerPainter.new,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_normalSpriteBytes != null)
-                        Image.memory(
-                          _isHappy ? _happySpriteBytes! : _normalSpriteBytes!,
-                          width: 150,
-                          height: 150,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.none,
-                        )
-                      else if (widget.solmateAnimal.normalSpritePath.startsWith('http'))
-                        Image.network(
-                          _isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
-                          width: 150,
-                          height: 150,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.none, // For pixelated look
-                          errorBuilder: (context, error, stackTrace) => NesContainer(
-                            width: 150,
-                            height: 150,
-                            backgroundColor: colorScheme.background,
-                            child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // constraints.maxWidth and constraints.maxHeight will now be nesContainerOuterDimension - (2 * 16.0)
+                      final gridDisplaySize = min(constraints.maxWidth, constraints.maxHeight); // Should be equal
+                      final cellSize = gridDisplaySize / 3;
+
+                      return Stack( // New Stack for layering
+                        children: [
+                          // Background Layer (single sprite for the entire grid)
+                          Container(
+                            width: gridDisplaySize,
+                            height: gridDisplaySize,
+                            color: Colors.grey[800], // Placeholder background color
+                            // Or Image.asset('path/to/background_sprite.png', fit: BoxFit.cover),
                           ),
-                        )
-                      else // Fallback for original dragon asset if sprites fail to load
-                        Image.asset(
-                          _isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
-                          width: 150,
-                          height: 150,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.none,
-                          errorBuilder: (context, error, stackTrace) => NesContainer(
-                            width: 150,
-                            height: 150,
-                            backgroundColor: colorScheme.background,
-                            child: Icon(Icons.pets, size: 80, color: colorScheme.onBackground.withOpacity(0.5)),
+
+                          // Grid Layer (Column of Rows)
+                          Column( // No need for Center or SizedBox here, it will fill LayoutBuilder
+                            children: List.generate(3, (row) {
+                              return Row(
+                                children: List.generate(3, (col) {
+                                  return Container(
+                                    width: cellSize,
+                                    height: cellSize,
+                                    decoration: BoxDecoration(
+                                      // Removed: color: backgroundColor,
+                                      // Individual cells are now transparent to show the single background
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        // Accessories layer
+                                        if (_accessoryGrid[row][col] && !(row == 2 && col == 1))
+                                          Center(
+                                            child: _buildSolmateImage(cellSize * 0.8), // Accessory
+                                          ),
+
+                                        // Solmate layer (only at [2][1])
+                                        if (row == 2 && col == 1)
+                                          Center(
+                                            child: _buildSolmateImage(cellSize * 0.9, isHappy: _isHappy), // Solmate
+                                          ),
+                                      ],
+                                    ),
+                                  );
+                                }),
+                              );
+                            }),
                           ),
-                        ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _solmateNameDisplay.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface, // Use onSurface color
-                          letterSpacing: 2.0,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildStatRow('HP', _health, colorScheme.error, Icons.favorite),
-                      _buildStatRow('HAP', _happiness, colorScheme.tertiary, Icons.sentiment_satisfied_alt),
-                      const SizedBox(height: 10),
-                    ],
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -179,28 +235,55 @@ class _SolmateScreenState extends State<SolmateScreen> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
               color: colorScheme.background, // Use background color for console body
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Column( // Changed from Row to Column
                 children: [
-                  _HardwareButton(icon: Icons.restaurant, label: 'Feed', onPressed: _feedSolmate),
-                  _HardwareButton(icon: Icons.pets, label: 'Pet', onPressed: _petSolmate),
-                  _HardwareButton(icon: Icons.tag_faces, label: 'Emote', onPressed: _emoteSolmate),
-                  _HardwareButton(
-                    icon: Icons.directions_run,
-                    label: 'Run',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RunGameScreen(
-                            solmateImageBytes: _normalSpriteBytes,
-                            solmateImagePath: _normalSpriteBytes == null 
-                                ? widget.solmateAnimal.normalSpritePath 
-                                : null,
-                          ),
-                        ),
-                      );
-                    },
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _HardwareButton(icon: Icons.restaurant, label: 'Feed', onPressed: _feedSolmate),
+                      _HardwareButton(icon: Icons.pets, label: 'Pet', onPressed: _petSolmate),
+                      _HardwareButton(icon: Icons.tag_faces, label: 'Emote', onPressed: _emoteSolmate),
+                    ],
+                  ),
+                  const SizedBox(height: 20), // Spacing between rows
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _HardwareButton(
+                        icon: Icons.shopping_cart, // New icon for marketplace
+                        label: 'Shop', // New label
+                        onPressed: () async {
+                          final updatedGrid = await Navigator.push<List<List<bool>>>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MarketplaceScreen(initialAccessoryGrid: _accessoryGrid),
+                            ),
+                          );
+                          if (updatedGrid != null) {
+                            setState(() {
+                              _accessoryGrid = updatedGrid;
+                            });
+                          }
+                        },
+                      ),
+                      _HardwareButton(
+                        icon: Icons.directions_run,
+                        label: 'Run',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RunGameScreen(
+                                solmateImageBytes: _normalSpriteBytes,
+                                solmateImagePath: _normalSpriteBytes == null
+                                    ? widget.solmateAnimal.normalSpritePath
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -210,38 +293,10 @@ class _SolmateScreenState extends State<SolmateScreen> {
       ),
     );
   }
-
-  Widget _buildStatRow(String label, int value, Color color, IconData icon) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 5),
-          Text(
-            '$label: ',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          Text(
-            '$value',
-            style: TextStyle(
-              fontSize: 14,
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
+
+
+
 
 class _HardwareButton extends StatefulWidget {
   final IconData icon;
@@ -320,3 +375,4 @@ class _HardwareButtonState extends State<_HardwareButton> {
     );
   }
 }
+
