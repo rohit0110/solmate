@@ -112,9 +112,9 @@ router.get('/:animal/:pubkey', async (req, res) => {
     }
 
     // 3. Generate sprites in parallel
-    const normalSpritePath = path.join(__dirname, '..', 'assets', `${animal}_normal.png`);
-    const happySpritePath = path.join(__dirname, '..', 'assets', `${animal}_happy.png`);
-    const deadSpritePath = path.join(__dirname, '..', 'assets', `${animal}_dead.png`);
+    const normalSpritePath = path.join(__dirname, '..', 'assets/sprites', `${animal}_normal.png`);
+    const happySpritePath = path.join(__dirname, '..', 'assets/sprites', `${animal}_happy.png`);
+    const deadSpritePath = path.join(__dirname, '..', 'assets/sprites', `${animal}_dead.png`);
 
     try {
         await fs.access(normalSpritePath);
