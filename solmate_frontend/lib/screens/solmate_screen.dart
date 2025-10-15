@@ -54,7 +54,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   }
 
   // New state for accessories
-  List<List<bool>> _accessoryGrid = List.generate(3, (_) => List.generate(3, (_) => false));
+  List<List<DecorationAsset?>> _accessoryGrid = List.generate(3, (_) => List.generate(3, (_) => null));
 
   @override
   void initState() {
@@ -287,9 +287,16 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                           child: Stack(
                                             children: [
                                               // Accessories layer
-                                              if (_accessoryGrid[row][col] && !(row == 2 && col == 1))
+                                              if (_accessoryGrid[row][col] != null && !(row == 2 && col == 1))
                                                 Center(
-                                                  child: _buildSolmateImage(cellSize * 0.8), // Accessory
+                                                  child: Image.network(
+                                                    'http://10.0.2.2:3000${_accessoryGrid[row][col]!.url}',
+                                                    width: cellSize * 0.8,
+                                                    height: cellSize * 0.8,
+                                                    fit: BoxFit.contain,
+                                                    filterQuality: FilterQuality.none,
+                                                    errorBuilder: (ctx, err, st) => const Icon(Icons.error, color: Colors.red),
+                                                  ),
                                                 ),
 
                                               // Solmate layer (only at [2][1])
@@ -375,7 +382,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                   });
                                   return;
                                 }
-                                final updatedGrid = await Navigator.push<List<List<bool>>>(
+                                final updatedGrid = await Navigator.push<List<List<DecorationAsset?>>>(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => MarketplaceScreen(initialAccessoryGrid: _accessoryGrid),
