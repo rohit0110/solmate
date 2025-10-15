@@ -111,26 +111,30 @@ router.get('/:animal/:pubkey', async (req, res) => {
         hash = hash.subarray(3);
     }
 
-    // 3. Generate both sprites in parallel
+    // 3. Generate sprites in parallel
     const normalSpritePath = path.join(__dirname, '..', 'assets', `${animal}_normal.png`);
     const happySpritePath = path.join(__dirname, '..', 'assets', `${animal}_happy.png`);
+    const deadSpritePath = path.join(__dirname, '..', 'assets', `${animal}_dead.png`);
 
     try {
         await fs.access(normalSpritePath);
         await fs.access(happySpritePath);
+        await fs.access(deadSpritePath);
     } catch (e) {
         return res.status(404).send(`Sprites for animal '${animal}' not found.`);
     }
 
-    const [normalSpriteBuffer, happySpriteBuffer] = await Promise.all([
+    const [normalSpriteBuffer, happySpriteBuffer, deadSpriteBuffer] = await Promise.all([
       generateColoredSprite(normalSpritePath, newFeatureColors, originalFeatureColors),
-      generateColoredSprite(happySpritePath, newFeatureColors, originalFeatureColors)
+      generateColoredSprite(happySpritePath, newFeatureColors, originalFeatureColors),
+      generateColoredSprite(deadSpritePath, newFeatureColors, originalFeatureColors)
     ]);
 
     // 4. Send JSON response with Base64 encoded images
     res.json({
       normal: normalSpriteBuffer.toString('base64'),
       happy: happySpriteBuffer.toString('base64'),
+      dead: deadSpriteBuffer.toString('base64')
     });
 
   } catch (error) {
