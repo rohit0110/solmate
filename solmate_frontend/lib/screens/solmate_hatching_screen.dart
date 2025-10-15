@@ -168,9 +168,12 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
 
     return Scaffold(
       backgroundColor: colorScheme.background, // Use background color from theme
-      body: SafeArea(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
+            child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -236,7 +239,8 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
                               child: TextField(
                                 controller: _nameController,
                                 textAlign: TextAlign.center,
-                                onSubmitted: (_) => _confirmName(),
+                                maxLength: 10,
+                                showCursor: true,
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -252,8 +256,8 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
               ],
             ),
           ),
-        ),
+        )),
       ),
-    );
+    ));
   }
 }

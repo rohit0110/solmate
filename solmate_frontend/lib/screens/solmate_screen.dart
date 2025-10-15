@@ -6,8 +6,8 @@ import 'package:home_widget/home_widget.dart';
 import 'package:nes_ui/nes_ui.dart';
 import 'package:solmate_frontend/api/solmate_api.dart';
 import 'package:solmate_frontend/screens/run_game_screen.dart';
-import 'package:solmate_frontend/screens/solmate_data.dart';
 import 'package:solmate_frontend/screens/marketplace_screen.dart';
+import 'package:solmate_frontend/screens/home_screen.dart';
 
 class SolmateScreen extends StatefulWidget {
   final String animalName;
@@ -221,7 +221,24 @@ class _SolmateScreenState extends State<SolmateScreen> {
     // Determine the largest square dimension for the NesContainer
     final nesContainerOuterDimension = min(containerAvailableWidth, containerAvailableHeight);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) {
+          return;
+        }
+        final confirmed = await NesConfirmDialog.show(
+          context: context,
+          message: 'Do you want to exit?',
+        );
+        if (confirmed == true) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (Route<dynamic> route) => false,
+          );
+        }
+      },
+      child: Scaffold(
       backgroundColor: colorScheme.background, // Use background color from theme
       body: SafeArea(
         child: _isLoading
@@ -369,12 +386,13 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                     _accessoryGrid = updatedGrid;
                                   });
                                 }
+                                _loadInitialData();
                               },
                             ),
                             _HardwareButton(
                               icon: Icons.directions_run,
                               label: 'Run',
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_health <= 0) {
                                   setState(() {
                                     _message = _getRandomDeadMessage();
@@ -382,7 +400,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                   return;
                                 }
                                 if (_normalSpriteBytes != null) {
-                                  Navigator.push(
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => RunGameScreen(
@@ -390,6 +408,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                       ),
                                     ),
                                   );
+                                  _loadInitialData();
                                 }
                               },
                             ),
@@ -401,7 +420,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                 ],
               ),
       ),
-    );
+    ));
   }
 }
 
