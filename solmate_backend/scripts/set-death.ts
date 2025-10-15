@@ -9,7 +9,7 @@ async function setLowHealth(pubkey: string) {
       return;
     }
 
-    const health = 20; // Low health
+    const health = 0; // Low health
     const hoursToSubtract = (100 - health) / 4;
     const now = new Date();
     const fedDate = new Date(now.getTime() - hoursToSubtract * 60 * 60 * 1000);

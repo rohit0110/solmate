@@ -6,7 +6,12 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/server.ts"
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/server.ts",
+    "low-health": "node --loader ts-node/esm scripts/set-low-health.ts",
+    "low-happiness": "node --loader ts-node/esm scripts/set-low-happiness.ts",
+    "death": "node --loader ts-node/esm scripts/set-death.ts",
+    "sucide": "node --loader ts-node/esm scripts/set-suicidal.ts",
+    "normal": "node --loader ts-node/esm scripts/set-normal.ts"
   },
   "keywords": [],
   "author": "",
