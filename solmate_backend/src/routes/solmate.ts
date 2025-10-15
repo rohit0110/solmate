@@ -7,6 +7,7 @@ const router = express.Router();
 interface SolmateData {
   pubkey: string;
   name: string;
+  animal: string;
   last_fed_at: string;
   last_pet_at: string;
   created_at: string;
@@ -77,7 +78,7 @@ router.get('/', async (req, res) => {
 
 // POST /api/solmate
 router.post('/', async (req, res) => {
-  const { pubkey, name } = req.body;
+  const { pubkey, name, animal } = req.body;
   if (!pubkey || !name) {
     return res.status(400).json({ error: 'pubkey and name are required' });
   }
@@ -90,8 +91,8 @@ router.post('/', async (req, res) => {
 
     const now = new Date().toISOString();
     await req.db.run(
-      'INSERT INTO solmates (pubkey, name, last_fed_at, last_pet_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [pubkey, name, now, now, now, now]
+      'INSERT INTO solmates (pubkey, name, animal, last_fed_at, last_pet_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [pubkey, name, animal, now, now, now, now]
     );
 
     const newSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
@@ -113,14 +114,27 @@ router.post('/feed', async (req, res) => {
   }
 
   try {
-    const now = new Date().toISOString();
+    const solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    if (!solmate) {
+      return res.status(404).json({ error: 'Solmate not found' });
+    }
+
+    const now = new Date();
+    const lastFed = new Date(solmate.last_fed_at);
+    const hoursSinceFed = (now.getTime() - lastFed.getTime()) / (1000 * 60 * 60);
+    const currentHealth = Math.max(0, 100 - hoursSinceFed * 4);
+    const newHealth = Math.min(100, currentHealth + 10);
+    const newHoursSinceFed = (100 - newHealth) / 4;
+    const newLastFedDate = new Date(now.getTime() - newHoursSinceFed * 60 * 60 * 1000);
+    const newLastFedAt = newLastFedDate.toISOString();
+
     const result = await req.db.run(
       'UPDATE solmates SET last_fed_at = ?, updated_at = ? WHERE pubkey = ?',
-      [now, now, pubkey]
+      [newLastFedAt, now.toISOString(), pubkey]
     );
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Solmate not found' });
+      return res.status(404).json({ error: 'Solmate not found during update' });
     }
 
     const updatedSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
@@ -142,14 +156,27 @@ router.post('/pet', async (req, res) => {
   }
 
   try {
-    const now = new Date().toISOString();
+    const solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    if (!solmate) {
+      return res.status(404).json({ error: 'Solmate not found' });
+    }
+
+    const now = new Date();
+    const lastPet = new Date(solmate.last_pet_at);
+    const hoursSincePet = (now.getTime() - lastPet.getTime()) / (1000 * 60 * 60);
+    const currentHappiness = Math.max(0, 100 - hoursSincePet * 2);
+    const newHappiness = Math.min(100, currentHappiness + 10);
+    const newHoursSincePet = (100 - newHappiness) / 2;
+    const newLastPetDate = new Date(now.getTime() - newHoursSincePet * 60 * 60 * 1000);
+    const newLastPetAt = newLastPetDate.toISOString();
+
     const result = await req.db.run(
       'UPDATE solmates SET last_pet_at = ?, updated_at = ? WHERE pubkey = ?',
-      [now, now, pubkey]
+      [newLastPetAt, now.toISOString(), pubkey]
     );
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Solmate not found' });
+      return res.status(404).json({ error: 'Solmate not found during update' });
     }
 
     const updatedSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);

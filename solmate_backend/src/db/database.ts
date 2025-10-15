@@ -23,7 +23,8 @@ export async function openDb(): Promise<Database> {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS solmates (
         pubkey VARCHAR(255) PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        name VARCHAR(20) NOT NULL,
+        animal VARCHAR(50) NOT NULL,
         last_fed_at TIMESTAMP WITH TIME ZONE NOT NULL,
         last_pet_at TIMESTAMP WITH TIME ZONE NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

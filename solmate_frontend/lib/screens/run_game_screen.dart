@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
 
 class RunGameScreen extends StatefulWidget {
-  final String? solmateImagePath;
-  final Uint8List? solmateImageBytes;
+  final Uint8List solmateImageBytes;
 
   const RunGameScreen({
     super.key, 
-    this.solmateImagePath,
-    this.solmateImageBytes,
-  }) : assert(solmateImagePath != null || solmateImageBytes != null);
+    required this.solmateImageBytes,
+  });
 
   @override
   State<RunGameScreen> createState() => _RunGameScreenState();
@@ -132,12 +130,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    ImageProvider imageProvider;
-    if (widget.solmateImageBytes != null) {
-      imageProvider = MemoryImage(widget.solmateImageBytes!);
-    } else {
-      imageProvider = AssetImage(widget.solmateImagePath!);
-    }
+    ImageProvider imageProvider = MemoryImage(widget.solmateImageBytes);
 
     return Scaffold(
       backgroundColor: colorScheme.background,

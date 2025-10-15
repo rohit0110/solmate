@@ -72,7 +72,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
           if (!mounted) return;
           Navigator.of(context).pushReplacement(MaterialPageRoute(
             builder: (_) => SolmateScreen(
-              solmateAnimal: widget.solmateAnimal,
+              animalName: widget.solmateAnimal.name,
               publicKey: widget.publicKey,
               solmateName: _nameController.text.trim(),
               solmateSprites: _spriteData,
@@ -97,7 +97,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
       });
 
       try {
-        await _api.createSolmate(widget.publicKey, solmateName);
+        await _api.createSolmate(widget.publicKey, solmateName, widget.solmateAnimal.name);
         // If successful, start the animation.
         _mintController.forward(from: 0.0);
       } catch (e) {

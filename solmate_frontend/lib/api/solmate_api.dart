@@ -20,11 +20,11 @@ class SolmateBackendApi {
     }
   }
 
-  Future<Map<String, dynamic>> createSolmate(String pubkey, String name) async {
+  Future<Map<String, dynamic>> createSolmate(String pubkey, String name, String animal) async {
     final response = await http.post(
       Uri.parse('$_baseUrl'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({'pubkey': pubkey, 'name': name}),
+      body: json.encode({'pubkey': pubkey, 'name': name, 'animal': animal}),
     );
 
     if (response.statusCode == 201) {

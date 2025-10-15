@@ -10,17 +10,17 @@ import 'package:solmate_frontend/screens/solmate_data.dart';
 import 'package:solmate_frontend/screens/marketplace_screen.dart';
 
 class SolmateScreen extends StatefulWidget {
-  final SolmateAnimal solmateAnimal;
+  final String animalName;
   final String solmateName;
   final String publicKey;
-  final Map<String, String>? solmateSprites; // Added this
+  final Map<String, String>? solmateSprites;
 
   const SolmateScreen({
     super.key,
-    required this.solmateAnimal,
+    required this.animalName,
     required this.publicKey,
     required this.solmateName,
-    this.solmateSprites, // Added this
+    this.solmateSprites,
   });
 
   @override
@@ -39,6 +39,19 @@ class _SolmateScreenState extends State<SolmateScreen> {
   // For unique sprites
   Uint8List? _normalSpriteBytes;
   Uint8List? _happySpriteBytes;
+  Uint8List? _deadSpriteBytes;
+
+  final List<String> _deadMessages = [
+    "LEAVE THEM ALONE YOU MONSTER",
+    "Oh he DEAD dead already",
+    "Too late you emotionless doodoohead",
+    "Stay away you Necrophiliac!",
+  ];
+
+  String _getRandomDeadMessage() {
+    final random = Random();
+    return _deadMessages[random.nextInt(_deadMessages.length)];
+  }
 
   // New state for accessories
   List<List<bool>> _accessoryGrid = List.generate(3, (_) => List.generate(3, (_) => false));
@@ -51,6 +64,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
     if (widget.solmateSprites != null) {
       _normalSpriteBytes = base64Decode(widget.solmateSprites!['normal']!);
       _happySpriteBytes = base64Decode(widget.solmateSprites!['happy']!);
+      _deadSpriteBytes = base64Decode(widget.solmateSprites!['dead']!);
     }
 
     _loadInitialData();
@@ -63,7 +77,11 @@ class _SolmateScreenState extends State<SolmateScreen> {
         _health = data!['health'];
         _happiness = data['happiness'];
         _solmateNameDisplay = data['name'] ?? widget.solmateName;
-        _message = "Your Solmate is ready!";
+        if (_health <= 0) {
+          _message = "Solmate has perished! RIP $_solmateNameDisplay";
+        } else {
+          _message = "Your Solmate is ready!";
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -80,25 +98,22 @@ class _SolmateScreenState extends State<SolmateScreen> {
     await HomeWidget.saveWidgetData<int>('solmateHealth', _health);
     await HomeWidget.saveWidgetData<int>('solmateHappiness', _happiness);
     
-    // TODO: Handle saving generated sprite to home widget. 
-    // Base64 strings might be too large for widget data.
     if (_normalSpriteBytes != null) {
-      await HomeWidget.saveWidgetData<String>('solmateImageBytes', 
-        _isHappy
-            ? base64Encode(_happySpriteBytes!)
-            : base64Encode(_normalSpriteBytes!)
-      );
-    } else {
-       await HomeWidget.saveWidgetData<String>('solmateImageUrl', 
-        _isHappy
-            ? widget.solmateAnimal.happySpritePath
-            : widget.solmateAnimal.normalSpritePath
-      );
+      final bytes = _health <= 0 && _deadSpriteBytes != null
+          ? _deadSpriteBytes!
+          : (_isHappy ? _happySpriteBytes! : _normalSpriteBytes!);
+      await HomeWidget.saveWidgetData<String>('solmateImageBytes', base64Encode(bytes));
     }
     await HomeWidget.updateWidget(name: 'SolmateWidget');
   }
 
   void _feedSolmate() async {
+    if (_health <= 0) {
+      setState(() {
+        _message = _getRandomDeadMessage();
+      });
+      return;
+    }
     setState(() {
       _message = "Feeding your Solmate...";
     });
@@ -118,6 +133,12 @@ class _SolmateScreenState extends State<SolmateScreen> {
   }
 
   void _petSolmate() async {
+    if (_health <= 0) {
+      setState(() {
+        _message = _getRandomDeadMessage();
+      });
+      return;
+    }
     setState(() {
       _message = "Petting your Solmate...";
     });
@@ -136,16 +157,38 @@ class _SolmateScreenState extends State<SolmateScreen> {
   }
 
   void _emoteSolmate() {
-    setState(() {
-      _isHappy = !_isHappy;
-      _message = _isHappy ? "Your Solmate emotes happily!" : "Your Solmate is back to normal!";
-    });
+    if (_health <= 0) {
+      setState(() {
+        _message = _getRandomDeadMessage();
+      });
+      return;
+    }
+    if(_happiness >= 50) {
+      setState(() {
+        _isHappy = !_isHappy;
+        _message = _isHappy ? "Your Solmate emotes happily!" : "Your Solmate is back to normal!";
+      });
+    } else {
+      setState(() {
+        _message = "Your Solmate is too unhappy to emote!";
+      });
+    }
     _saveSolmateData();
   }
 
-  // New helper function for building solmate/accessory images
   Widget _buildSolmateImage(double size, {bool isHappy = false}) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    if (_health <= 0 && _deadSpriteBytes != null) {
+      return Image.memory(
+        _deadSpriteBytes!,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+      );
+    }
+
     if (_normalSpriteBytes != null) {
       return Image.memory(
         isHappy ? _happySpriteBytes! : _normalSpriteBytes!,
@@ -154,34 +197,13 @@ class _SolmateScreenState extends State<SolmateScreen> {
         fit: BoxFit.contain,
         filterQuality: FilterQuality.none,
       );
-    } else if (widget.solmateAnimal.normalSpritePath.startsWith('http')) {
-      return Image.network(
-        isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
+    } else {
+      // Fallback if sprites are not available for some reason.
+      return NesContainer(
         width: size,
         height: size,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.none,
-        errorBuilder: (context, error, stackTrace) => NesContainer(
-          width: size,
-          height: size,
-          backgroundColor: colorScheme.background,
-          child: Icon(Icons.pets, size: size * 0.5, color: colorScheme.onBackground.withOpacity(0.5)),
-        ),
-      );
-    }
-    else {
-      return Image.asset(
-        isHappy ? widget.solmateAnimal.happySpritePath : widget.solmateAnimal.normalSpritePath,
-        width: size,
-        height: size,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.none,
-        errorBuilder: (context, error, stackTrace) => NesContainer(
-          width: size,
-          height: size,
-          backgroundColor: colorScheme.background,
-          child: Icon(Icons.pets, size: size * 0.5, color: colorScheme.onBackground.withOpacity(0.5)),
-        ),
+        backgroundColor: colorScheme.background,
+        child: Icon(Icons.error_outline, size: size * 0.5, color: colorScheme.onBackground.withOpacity(0.5)),
       );
     }
   }
@@ -298,15 +320,21 @@ class _SolmateScreenState extends State<SolmateScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20), // Add spacing after stats row
+                  const SizedBox(height: 20),
                   // Message display area
-                  NesRunningText(text: _message),
+                  // NesRunningText(text: _message) // TODO: Running Text spills over and looks bad, can try to fix later
+                  Center(
+                    child: Text(
+                      _message,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                   const Spacer(),
                   // Hardware-like buttons
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
                     color: colorScheme.background, // Use background color for console body
-                    child: Column( // Changed from Row to Column
+                    child: Column(
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -316,14 +344,20 @@ class _SolmateScreenState extends State<SolmateScreen> {
                             _HardwareButton(icon: Icons.tag_faces, label: 'Emote', onPressed: _emoteSolmate),
                           ],
                         ),
-                        const SizedBox(height: 20), // Spacing between rows
+                        const SizedBox(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             _HardwareButton(
-                              icon: Icons.shopping_cart, // New icon for marketplace
-                              label: 'Shop', // New label
+                              icon: Icons.shopping_cart,
+                              label: 'Shop',
                               onPressed: () async {
+                                if (_health <= 0) {
+                                  setState(() {
+                                    _message = _getRandomDeadMessage();
+                                  });
+                                  return;
+                                }
                                 final updatedGrid = await Navigator.push<List<List<bool>>>(
                                   context,
                                   MaterialPageRoute(
@@ -341,17 +375,22 @@ class _SolmateScreenState extends State<SolmateScreen> {
                               icon: Icons.directions_run,
                               label: 'Run',
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RunGameScreen(
-                                      solmateImageBytes: _normalSpriteBytes,
-                                      solmateImagePath: _normalSpriteBytes == null
-                                          ? widget.solmateAnimal.normalSpritePath
-                                          : null,
+                                if (_health <= 0) {
+                                  setState(() {
+                                    _message = _getRandomDeadMessage();
+                                  });
+                                  return;
+                                }
+                                if (_normalSpriteBytes != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => RunGameScreen(
+                                        solmateImageBytes: _normalSpriteBytes!,
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                }
                               },
                             ),
                           ],
@@ -413,13 +452,13 @@ class _HardwareButtonState extends State<_HardwareButton> {
         width: 80,
         height: 80,
         decoration: BoxDecoration(
-          color: colorScheme.primary, // Use primary color for button base
+          color: colorScheme.primary,
           borderRadius: BorderRadius.circular(10.0),
           boxShadow: _isPressed
-              ? [] // No shadow when pressed
+              ? []
               : [
                   BoxShadow(
-                    color: colorScheme.onSurface.withOpacity(0.3), // Use onSurface for shadow
+                    color: colorScheme.onSurface.withOpacity(0.3),
                     offset: const Offset(0, 4),
                     blurRadius: 0,
                     spreadRadius: 0,

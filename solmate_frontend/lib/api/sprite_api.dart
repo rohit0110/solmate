@@ -16,6 +16,7 @@ class SolmateApi {
       return {
         'normal': data['normal'] as String,
         'happy': data['happy'] as String,
+        'dead': data['dead'] as String,
       };
     } else {
       // If the server did not return a 200 OK response,

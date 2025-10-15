@@ -29,16 +29,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (solmateData != null) {
         // User exists, fetch sprites then navigate to SolmateScreen
-        // The backend doesn't return the animal type, so we'll need to decide what to do here.
-        // For now, let's default to dragon.
-        final animal = SolmateAnimal(name: "Dragon", normalSpritePath: "assets/sprites/dragon_normal.png", happySpritePath: "assets/sprites/dragon_happy.png");
-        final spriteData = await SolmateApi.getSprites(animal.name, pubkey);
+        final spriteData = await SolmateApi.getSprites(solmateData['animal'], pubkey);
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => SolmateScreen(
-              solmateAnimal: animal,
+              animalName: solmateData['animal'],
               publicKey: pubkey,
               solmateName: solmateData['name'],
               solmateSprites: spriteData,
