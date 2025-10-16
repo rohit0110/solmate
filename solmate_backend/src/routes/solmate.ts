@@ -66,10 +66,21 @@ router.get('/', async (req, res) => {
     );
 
     if (!solmate) {
-      return res.status(404).json({ error: 'Solmate not found' });
+      // Return null if not found, so frontend can distinguish between not found and error
+      return res.json(null);
     }
 
-    res.json(calculateStats(solmate));
+    const decorations = await req.db.all(
+      'SELECT row, col, decoration_name as name, decoration_url as url FROM selected_decorations WHERE solmate_pubkey = ?',
+      [pubkey]
+    );
+
+    const solmateWithDecorations = {
+      ...solmate,
+      decorations: decorations,
+    };
+
+    res.json(calculateStats(solmateWithDecorations as SolmateData));
   } catch (error) {
     console.error('Error fetching solmate:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -186,6 +197,48 @@ router.post('/pet', async (req, res) => {
     res.json(calculateStats(updatedSolmate));
   } catch (error) {
     console.error('Error petting solmate:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/decorations', async (req, res) => {
+  const { pubkey, decorations } = req.body;
+
+  if (!pubkey || !Array.isArray(decorations)) {
+    return res.status(400).json({ error: 'pubkey and decorations array are required' });
+  }
+
+  const db = req.db;
+
+  try {
+    // Use a transaction to ensure atomicity
+    await db.exec('BEGIN TRANSACTION');
+
+    // Clear old decorations for this user
+    await db.run('DELETE FROM selected_decorations WHERE solmate_pubkey = ?', [pubkey]);
+
+    // Insert new decorations
+    const insertStmt = await db.prepare(
+      'INSERT INTO selected_decorations (solmate_pubkey, row, col, decoration_name, decoration_url) VALUES (?, ?, ?, ?, ?)'
+    );
+
+    for (let r = 0; r < decorations.length; r++) {
+        const row = decorations[r];
+        for (let c = 0; c < row.length; c++) {
+            const asset = row[c];
+            if (asset) {
+                await insertStmt.run(pubkey, r, c, asset.name, asset.url);
+            }
+        }
+    }
+
+    await insertStmt.finalize();
+    await db.exec('COMMIT');
+
+    res.status(200).json({ message: 'Decorations saved successfully' });
+  } catch (error) {
+    await db.exec('ROLLBACK');
+    console.error('Error saving decorations:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

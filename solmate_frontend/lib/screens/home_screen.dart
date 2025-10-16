@@ -3,7 +3,6 @@ import 'package:nes_ui/nes_ui.dart';
 import 'package:solmate_frontend/api/solmate_api.dart';
 import 'package:solmate_frontend/api/sprite_api.dart';
 import 'package:solmate_frontend/screens/solmate_screen.dart';
-import 'package:solmate_frontend/screens/solmate_data.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

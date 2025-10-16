@@ -1,29 +1,15 @@
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
 import 'package:solmate_frontend/api/decor_api.dart';
-
-// Data model for a decoration asset
-class DecorationAsset {
-  final String name;
-  final String url;
-
-  DecorationAsset({required this.name, required this.url});
-
-  // Factory constructor to create an instance from a JSON map
-  factory DecorationAsset.fromJson(Map<String, dynamic> json) {
-    return DecorationAsset(
-      name: json['name'] as String,
-      url: json['url'] as String,
-    );
-  }
-}
+import 'package:solmate_frontend/models/decoration_asset.dart';
 
 class MarketplaceScreen extends StatefulWidget {
-  final List<List<DecorationAsset?>> initialAccessoryGrid;
+  final List<DecorationAsset> initialSelectedDecorations;
 
   const MarketplaceScreen({
     super.key,
-    required this.initialAccessoryGrid,
+    required this.initialSelectedDecorations,
   });
 
   @override
@@ -31,16 +17,16 @@ class MarketplaceScreen extends StatefulWidget {
 }
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
-  late List<List<DecorationAsset?>> _accessoryGrid;
-  // To store all available decorations fetched from the API
-  Map<String, List<DecorationAsset>> _availableDecorations = {};
+  late List<DecorationAsset> _selectedDecorations;
+  // To store all available decorations fetched from the API, grouped by position
+  Map<String, List<DecorationAsset>> _availableDecorationsByPos = {};
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Deep copy the initial grid
-    _accessoryGrid = widget.initialAccessoryGrid.map((row) => List<DecorationAsset?>.from(row)).toList();
+    // Deep copy the initial list
+    _selectedDecorations = List<DecorationAsset>.from(widget.initialSelectedDecorations);
     _fetchDecorations();
   }
 
@@ -50,12 +36,8 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       final Map<String, List<DecorationAsset>> processedDecorations = {};
 
       for (final item in decorationsList) {
-        final decoration = item as Map<String, dynamic>;
-        final row = decoration['row'] as int;
-        final col = decoration['col'] as int;
-        final key = '${row}_${col}';
-
-        final asset = DecorationAsset.fromJson(decoration);
+        final asset = DecorationAsset.fromJson(item as Map<String, dynamic>);
+        final key = '${asset.row}_${asset.col}';
 
         if (processedDecorations[key] == null) {
           processedDecorations[key] = [];
@@ -64,7 +46,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       }
 
       setState(() {
-        _availableDecorations = processedDecorations;
+        _availableDecorationsByPos = processedDecorations;
         _isLoading = false;
       });
     } catch (e) {
@@ -81,15 +63,23 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     if (row == 2 && col == 1) return; // Cannot toggle solmate's spot
 
     final key = '${row}_${col}';
-    final assetsForSlot = _availableDecorations[key] ?? [];
+    final assetsForSlot = _availableDecorationsByPos[key] ?? [];
+
+    // Find the currently selected asset for this slot, if any
+    DecorationAsset? currentAssetInSlot;
+    try {
+      currentAssetInSlot = _selectedDecorations.firstWhere((asset) => asset.row == row && asset.col == col);
+    } catch (e) {
+      currentAssetInSlot = null; // Not found
+    }
 
     showDialog(
       context: context,
       builder: (context) {
-        DecorationAsset? selectedAssetInDialog = _accessoryGrid[row][col];
+        DecorationAsset? selectedAssetInDialog = currentAssetInSlot;
 
         return AlertDialog(
-          title: Text('Select Decoration'),
+          title: const Text('Select Decoration'),
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setStateDialog) {
               return SizedBox(
@@ -115,8 +105,8 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                     return RadioListTile<DecorationAsset?>(
                       title: Text(asset.name),
                       secondary: Image.network(
-                        'http://10.0.2.2:3000${asset.url}', // Assuming base URL
-                        width: 40, 
+                        'http://10.0.2.2:3000${asset.url}',
+                        width: 40,
                         height: 40,
                         fit: BoxFit.contain,
                         errorBuilder: (ctx, err, st) => const Icon(Icons.error),
@@ -142,7 +132,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _accessoryGrid[row][col] = selectedAssetInDialog;
+                  // Remove any existing decoration at this position
+                  _selectedDecorations.removeWhere((asset) => asset.row == row && asset.col == col);
+                  // Add the new one if one was selected
+                  if (selectedAssetInDialog != null) {
+                    _selectedDecorations.add(selectedAssetInDialog!);
+                  }
                 });
                 Navigator.of(context).pop();
               },
@@ -157,6 +152,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    // Create a map of selected decorations for quick lookup
+    final selectedMap = HashMap<String, DecorationAsset>();
+    for (var asset in _selectedDecorations) {
+      selectedMap['${asset.row}_${asset.col}'] = asset;
+    }
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -184,7 +185,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 children: List.generate(3, (row) {
                                   return Row(
                                     children: List.generate(3, (col) {
-                                      final selectedAsset = _accessoryGrid[row][col];
+                                      final selectedAsset = selectedMap['${row}_${col}'];
                                       return GestureDetector(
                                         onTap: () => _showAssetSelectionDialog(row, col),
                                         child: Container(
@@ -220,7 +221,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                     child: NesButton(
                       type: NesButtonType.primary,
                       onPressed: () {
-                        Navigator.pop(context, _accessoryGrid);
+                        Navigator.pop(context, _selectedDecorations);
                       },
                       child: const Text('Save & Close'),
                     ),
