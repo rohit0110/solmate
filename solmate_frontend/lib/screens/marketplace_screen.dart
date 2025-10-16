@@ -18,14 +18,13 @@ class MarketplaceScreen extends StatefulWidget {
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   late List<DecorationAsset> _selectedDecorations;
-  // To store all available decorations fetched from the API, grouped by position
   Map<String, List<DecorationAsset>> _availableDecorationsByPos = {};
   bool _isLoading = true;
+  String? _selectedPositionKey;
 
   @override
   void initState() {
     super.initState();
-    // Deep copy the initial list
     _selectedDecorations = List<DecorationAsset>.from(widget.initialSelectedDecorations);
     _fetchDecorations();
   }
@@ -59,93 +58,106 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     }
   }
 
-  void _showAssetSelectionDialog(int row, int col) {
-    if (row == 2 && col == 1) return; // Cannot toggle solmate's spot
+  void _onDecorationSelected(DecorationAsset? assetToSelect, int row, int col) {
+    setState(() {
+      // Remove any existing decoration at this position
+      _selectedDecorations.removeWhere((asset) => asset.row == row && asset.col == col);
+      // Add the new one if one was selected
+      if (assetToSelect != null) {
+        _selectedDecorations.add(assetToSelect);
+      }
+    });
+  }
 
-    final key = '${row}_${col}';
-    final assetsForSlot = _availableDecorationsByPos[key] ?? [];
+  String _getPositionName(String? key) {
+    if (key == null) return "";
+    final parts = key.split('_');
+    final row = int.parse(parts[0]);
+    final col = int.parse(parts[1]);
 
-    // Find the currently selected asset for this slot, if any
-    DecorationAsset? currentAssetInSlot;
-    try {
-      currentAssetInSlot = _selectedDecorations.firstWhere((asset) => asset.row == row && asset.col == col);
-    } catch (e) {
-      currentAssetInSlot = null; // Not found
+    const rowNames = ['Top', 'Middle', 'Bottom'];
+    const colNames = ['Left', 'Center', 'Right'];
+
+    return "${rowNames[row]} ${colNames[col]}";
+  }
+
+  Widget _buildDecorationSelector() {
+    if (_selectedPositionKey == null) {
+      return const Spacer();
     }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        DecorationAsset? selectedAssetInDialog = currentAssetInSlot;
+    final assetsForSlot = _availableDecorationsByPos[_selectedPositionKey!] ?? [];
+    final positionName = _getPositionName(_selectedPositionKey);
 
-        return AlertDialog(
-          title: const Text('Select Decoration'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setStateDialog) {
-              return SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: assetsForSlot.length + 1, // +1 for 'None' option
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return RadioListTile<DecorationAsset?>(
-                        title: const Text('None'),
-                        value: null,
-                        groupValue: selectedAssetInDialog,
-                        onChanged: (value) {
-                          setStateDialog(() {
-                            selectedAssetInDialog = value;
-                          });
-                        },
-                      );
-                    }
+    DecorationAsset? currentAssetInSlot;
+    try {
+      final parts = _selectedPositionKey!.split('_');
+      final row = int.parse(parts[0]);
+      final col = int.parse(parts[1]);
+      currentAssetInSlot = _selectedDecorations.firstWhere((asset) => asset.row == row && asset.col == col);
+    } catch (e) {
+      currentAssetInSlot = null;
+    }
 
-                    final asset = assetsForSlot[index - 1];
-                    return RadioListTile<DecorationAsset?>(
-                      title: Text(asset.name),
-                      secondary: Image.network(
-                        'http://10.0.2.2:3000${asset.url}',
-                        width: 40,
-                        height: 40,
-                        fit: BoxFit.contain,
-                        errorBuilder: (ctx, err, st) => const Icon(Icons.error),
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: NesContainer(
+          width: double.infinity,
+          label: '$positionName',
+          child: ListView.builder(
+            itemCount: assetsForSlot.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                // 'None' option
+                final bool isSelected = currentAssetInSlot == null;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: InkWell(
+                    onTap: () => _onDecorationSelected(null, int.parse(_selectedPositionKey!.split('_')[0]), int.parse(_selectedPositionKey!.split('_')[1])),
+                    child: NesContainer(
+                      padding: const EdgeInsets.all(12.0),
+                      backgroundColor: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
+                      child: const Row(
+                        children: [
+                          Text('None'),
+                        ],
                       ),
-                      value: asset,
-                      groupValue: selectedAssetInDialog,
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          selectedAssetInDialog = value;
-                        });
-                      },
-                    );
-                  },
+                    ),
+                  ),
+                );
+              }
+
+              final asset = assetsForSlot[index - 1];
+              final bool isSelected = currentAssetInSlot?.url == asset.url;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: InkWell(
+                  onTap: () => _onDecorationSelected(asset, asset.row, asset.col),
+                  child: NesContainer(
+                    padding: const EdgeInsets.all(8.0),
+                    backgroundColor: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
+                    child: Row(
+                      children: [
+                        Text(asset.name),
+                        const Spacer(),
+                        Image.network(
+                          'http://10.0.2.2:3000${asset.url}',
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.contain,
+                          errorBuilder: (ctx, err, st) => const Icon(Icons.error),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  // Remove any existing decoration at this position
-                  _selectedDecorations.removeWhere((asset) => asset.row == row && asset.col == col);
-                  // Add the new one if one was selected
-                  if (selectedAssetInDialog != null) {
-                    _selectedDecorations.add(selectedAssetInDialog!);
-                  }
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -153,7 +165,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Create a map of selected decorations for quick lookup
     final selectedMap = HashMap<String, DecorationAsset>();
     for (var asset in _selectedDecorations) {
       selectedMap['${asset.row}_${asset.col}'] = asset;
@@ -163,59 +174,60 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       backgroundColor: colorScheme.background,
       body: SafeArea(
         child: _isLoading
-            ? const Center(
-                child: Text("Loading..."),
-              )
+            ? const Center(child: Text("Loading..."))
             : Column(
                 children: [
-                  Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: NesContainer(
-                          padding: const EdgeInsets.all(16.0),
-                          label: "ACCESSORIES",
-                          backgroundColor: colorScheme.surface,
-                          painterBuilder: NesContainerSquareCornerPainter.new,
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final cellSize = constraints.maxWidth / 3;
-
-                              return Column(
-                                children: List.generate(3, (row) {
-                                  return Row(
-                                    children: List.generate(3, (col) {
-                                      final selectedAsset = selectedMap['${row}_${col}'];
-                                      return GestureDetector(
-                                        onTap: () => _showAssetSelectionDialog(row, col),
-                                        child: Container(
-                                          width: cellSize,
-                                          height: cellSize,
-                                          decoration: BoxDecoration(
-                                            color: colorScheme.surfaceVariant,
-                                            border: Border.all(color: Colors.black, width: 1),
-                                          ),
-                                          child: (row == 2 && col == 1)
-                                              ? Center(child: Text('SOLMATE', style: TextStyle(color: colorScheme.onSurface)))
-                                              : selectedAsset != null
-                                                  ? Image.network(
-                                                      'http://10.0.2.2:3000${selectedAsset.url}',
-                                                      fit: BoxFit.contain,
-                                                      errorBuilder: (ctx, err, st) => const Icon(Icons.error, color: Colors.red),
-                                                    )
-                                                  : null,
-                                        ),
-                                      );
-                                    }),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: NesContainer(
+                      padding: const EdgeInsets.all(16.0),
+                      label: "ACCESSORIES",
+                      backgroundColor: colorScheme.surface,
+                      painterBuilder: NesContainerSquareCornerPainter.new,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final cellSize = constraints.maxWidth / 3;
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(3, (row) {
+                              return Row(
+                                children: List.generate(3, (col) {
+                                  final selectedAsset = selectedMap['${row}_${col}'];
+                                  final isSelectedCell = _selectedPositionKey == '${row}_${col}';
+                                  return GestureDetector(
+                                    onTap: () {
+                                      if (row == 2 && col == 1) return;
+                                      setState(() {
+                                        _selectedPositionKey = '${row}_${col}';
+                                      });
+                                    },
+                                    child: Container(
+                                      width: cellSize,
+                                      height: cellSize,
+                                      decoration: BoxDecoration(
+                                        color: isSelectedCell ? colorScheme.primaryContainer : colorScheme.surfaceVariant,
+                                        border: Border.all(color: Colors.black, width: isSelectedCell ? 3 : 1),
+                                      ),
+                                      child: (row == 2 && col == 1)
+                                          ? Center(child: Text('SOLMATE', style: TextStyle(color: colorScheme.onSurface)))
+                                          : selectedAsset != null
+                                              ? Image.network(
+                                                  'http://10.0.2.2:3000${selectedAsset.url}',
+                                                  fit: BoxFit.contain,
+                                                  errorBuilder: (ctx, err, st) => const Icon(Icons.error, color: Colors.red),
+                                                )
+                                              : null,
+                                    ),
                                   );
                                 }),
                               );
-                            },
-                          ),
-                        ),
+                            }),
+                          );
+                        },
                       ),
                     ),
                   ),
+                  _buildDecorationSelector(),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: NesButton(
