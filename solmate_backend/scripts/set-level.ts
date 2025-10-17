@@ -35,7 +35,7 @@ async function setLevel(pubkey: string) {
   }
 }
 
-const pubkey = '7WKaHxMy54Mn5JPpETqiwwkcyJLmkcsrjwfvUnDqPpdN';
+const pubkey = '79kPbM2CchFpLt51exnzqyr1gow2ddKExDmtZHz22g7G';
 
 setLevel(pubkey).catch(error => {
   console.error('Failed to set low level:', error);
