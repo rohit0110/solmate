@@ -216,7 +216,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
   Widget _buildDecorationSelector() {
     if (_selectedDecorationPositionKey == null) {
-      return const Spacer();
+      return Container(); // Return an empty container when no position is selected
     }
 
     final assetsForSlot = _availableDecorationsByPos[_selectedDecorationPositionKey!] ?? [];
@@ -234,28 +234,38 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
         child: NesContainer(
           width: double.infinity,
           label: '$positionName',
-          child: ListView.builder(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(8.0),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+              childAspectRatio: 1.0, // Make items square
+            ),
             itemCount: assetsForSlot.length + 1,
             itemBuilder: (context, index) {
               // 'None' option
               if (index == 0) {
                 final bool isSelected = currentAssetInSlot == null;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: InkWell(
-                    onTap: () => _onDecorationSelected(null, int.parse(_selectedDecorationPositionKey!.split('_')[0]), int.parse(_selectedDecorationPositionKey!.split('_')[1])),
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      color: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
-                      child: const Row(
-                        children: [
-                          Text('None'),
-                        ],
-                      ),
+                return InkWell(
+                  onTap: () => _onDecorationSelected(null, int.parse(_selectedDecorationPositionKey!.split('_')[0]), int.parse(_selectedDecorationPositionKey!.split('_')[1])!),
+                  child: NesContainer(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Center(child: Text('None', style: TextStyle(color: Theme.of(context).colorScheme.onSurface))), // Use theme color
+                        if (isSelected)
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.green, width: 4),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 );
@@ -274,38 +284,70 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   }
                 } else if (asset.unlock!.type == 'paid') {
                   isLocked = true;
-                  lockText = "\$${asset.unlock!.value}";
+                  lockText = "${asset.unlock!.value} SOL";
                 }
               }
 
-              return Opacity(
-                opacity: isLocked ? 0.5 : 1.0,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: InkWell(
-                    onTap: isLocked ? null : () => _onDecorationSelected(asset, asset.row, asset.col),
-                    child: NesContainer(
-                      padding: const EdgeInsets.all(8.0),
-                      backgroundColor: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
-                      child: Row(
-                        children: [
-                          Text(asset.name),
-                          const Spacer(),
-                          if (isLocked) ...[
-                            Text(lockText, style: const TextStyle(color: Colors.red)),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.lock, color: Colors.red, size: 20),
-                          ] else
-                            Image.network(
-                              'http://10.0.2.2:3000${asset.url}',
-                              width: 40,
-                              height: 40,
-                              fit: BoxFit.contain,
-                              errorBuilder: (ctx, err, st) => const Icon(Icons.error),
-                            ),
-                        ],
+              return InkWell(
+                onTap: isLocked ? null : () => _onDecorationSelected(asset, asset.row, asset.col),
+                child: NesContainer(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Asset Image
+                      Image.network(
+                        'http://10.0.2.2:3000${asset.url}',
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.contain, // Use contain for decorations
+                        errorBuilder: (ctx, err, st) => const Icon(Icons.error, color: Colors.red),
                       ),
-                    ),
+
+                      // Name at the bottom
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          width: double.infinity,
+                          color: Colors.black.withOpacity(0.5),
+                          padding: const EdgeInsets.all(4.0),
+                          child: Text(
+                            asset.name,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+
+                      // Locked Overlay
+                      if (isLocked)
+                        Container(
+                          color: Colors.black.withOpacity(0.6),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.lock, color: Color.fromARGB(255, 255, 212, 41), size: 32),
+                                const SizedBox(height: 4),
+                                Text(
+                                  lockText,
+                                  style: const TextStyle(color: Color.fromARGB(255, 255, 212, 41), fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      // Selection Border
+                      if (isSelected)
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.green, width: 4),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               );
@@ -381,7 +423,14 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   }
 
   Widget _buildBackgroundsTab() {
-    return ListView.builder(
+    return GridView.builder(
+      padding: const EdgeInsets.all(8.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 8.0,
+        mainAxisSpacing: 8.0,
+        childAspectRatio: 1.0, // Make items square
+      ),
       itemCount: _availableBackgrounds.length,
       itemBuilder: (context, index) {
         final background = _availableBackgrounds[index];
@@ -398,36 +447,66 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           }
         }
 
-        return Opacity(
-          opacity: isLocked ? 0.5 : 1.0,
-          child: InkWell(
-            onTap: isLocked ? null : () => _onBackgroundSelected(background),
-            child: Container(
-              margin: const EdgeInsets.all(8.0),
-              padding: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
-                border: Border.all(color: Colors.black),
-              ),
-              child: Row(
-                children: [
-                  Image.network(
-                    'http://10.0.2.2:3000${background.url}',
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
+        return InkWell(
+          onTap: isLocked ? null : () => _onBackgroundSelected(background),
+          child: NesContainer(
+            padding: const EdgeInsets.all(4.0),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Background Image
+                Image.network(
+                  'http://10.0.2.2:3000${background.url}',
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, st) => const Icon(Icons.error, color: Colors.red),
+                ),
+
+                // Name at the bottom
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    width: double.infinity,
+                    color: Colors.black.withOpacity(0.5),
+                    padding: const EdgeInsets.all(4.0),
+                    child: Text(
+                      background.name,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  const SizedBox(width: 16),
-                  Text(background.name, style: const TextStyle(fontSize: 18)),
-                  const Spacer(),
-                  if (isLocked)
-                    Row(children: [
-                      Text(lockText, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.lock, color: Colors.red, size: 20),
-                    ]),
-                ],
-              ),
+                ),
+
+                // Locked Overlay
+                if (isLocked)
+                  Container(
+                    color: Colors.black.withOpacity(0.6),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.lock, color: Color.fromARGB(255, 255, 212, 41), size: 32),
+                          const SizedBox(height: 4),
+                          Text(
+                            lockText,
+                            style: const TextStyle(color: Color.fromARGB(255, 255, 212, 41), fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Selection Border
+                if (isSelected)
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.green, width: 4),
+                    ),
+                  ),
+              ],
             ),
           ),
         );
