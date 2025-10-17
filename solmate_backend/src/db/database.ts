@@ -24,6 +24,7 @@ export async function openDb(): Promise<Database> {
     CREATE TABLE IF NOT EXISTS solmates (
         pubkey VARCHAR(255) PRIMARY KEY,
         name VARCHAR(20) NOT NULL,
+        level INTEGER NOT NULL,
         animal VARCHAR(50) NOT NULL,
         last_fed_at TIMESTAMP WITH TIME ZONE NOT NULL,
         last_pet_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -43,13 +44,13 @@ export async function openDb(): Promise<Database> {
     );
   `);
 
-  // Add name column if it doesn't exist for existing tables
+  // Add level column if it doesn't exist for existing tables
   const columns = await db.all('PRAGMA table_info(solmates)');
-  const hasNameColumn = columns.some((c: any) => c.name === 'name');
-  if (!hasNameColumn) {
+  const hasLevelColumn = columns.some((c: any) => c.name === 'level');
+  if (!hasLevelColumn) {
     // Added NOT NULL and a DEFAULT value to avoid constraint violations on existing rows.
-    await db.exec('ALTER TABLE solmates ADD COLUMN name VARCHAR(255) NOT NULL DEFAULT \'My Solmate\'');
-    console.log('Added "name" column to solmates table.');
+    await db.exec('ALTER TABLE solmates ADD COLUMN level INTEGER NOT NULL DEFAULT 1');
+    console.log('Added "level" column to solmates table.');
   }
 
   console.log('Database tables are ready.');

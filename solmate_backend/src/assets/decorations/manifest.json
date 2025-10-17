@@ -3,54 +3,80 @@
     "row": 2,
     "col": 0,
     "name": "chair",
-    "filename": "chair.png"
+    "filename": "chair.png",
+    "unlock": {
+      "type": "level",
+      "level": 1
+    }
   },
   {
     "row": 2,
     "col": 2,
     "name": "plant",
-    "filename": "plant.png"
+    "filename": "plant.png",
+    "unlock": {
+      "type": "level",
+      "level": 2
+    }
   },
   {
     "row": 1,
     "col": 1,
     "name": "painting",
-    "filename": "painting.png"
-  },
-  {
-    "row": 1,
-    "col": 1,
-    "name": "painting1",
-    "filename": "painting.png"
+    "filename": "painting.png",
+    "unlock": {
+      "type": "level",
+      "level": 1
+    }
   },
   {
     "row": 1,
     "col": 1,
     "name": "painting2",
-    "filename": "chandelier.png"
+    "filename": "chandelier.png",
+    "unlock": {
+      "type": "level",
+      "level": 2
+    }
   },
   {
     "row": 1,
     "col": 1,
     "name": "painting3",
-    "filename": "plant.png"
+    "filename": "plant.png",
+    "unlock": {
+      "type": "level",
+      "level": 3
+    }
   },
   {
     "row": 1,
     "col": 1,
     "name": "painting4",
-    "filename": "chair.png"
+    "filename": "chair.png",
+    "unlock": {
+      "type": "level",
+      "level": 4
+    }
   },
   {
     "row": 1,
     "col": 2,
     "name": "painting",
-    "filename": "painting.png"
+    "filename": "painting.png",
+    "unlock": {
+      "type": "level",
+      "level": 1
+    }
   },
   {
     "row": 0,
     "col": 1,
     "name": "chandelier",
-    "filename": "chandelier.png"
+    "filename": "chandelier.png",
+    "unlock": {
+      "type": "paid",
+      "amount": 0.01
+    }
   }
 ]

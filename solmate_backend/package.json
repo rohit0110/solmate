@@ -11,7 +11,8 @@
     "low-happiness": "node --loader ts-node/esm scripts/set-low-happiness.ts",
     "death": "node --loader ts-node/esm scripts/set-death.ts",
     "sucide": "node --loader ts-node/esm scripts/set-suicidal.ts",
-    "normal": "node --loader ts-node/esm scripts/set-normal.ts"
+    "normal": "node --loader ts-node/esm scripts/set-normal.ts",
+    "level": "node --loader ts-node/esm scripts/set-level.ts"
   },
   "keywords": [],
   "author": "",

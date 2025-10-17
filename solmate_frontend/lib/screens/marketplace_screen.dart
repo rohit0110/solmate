@@ -6,10 +6,12 @@ import 'package:solmate_frontend/models/decoration_asset.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   final List<DecorationAsset> initialSelectedDecorations;
+  final int userLevel;
 
   const MarketplaceScreen({
     super.key,
     required this.initialSelectedDecorations,
+    required this.userLevel,
   });
 
   @override
@@ -104,20 +106,20 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         padding: const EdgeInsets.all(8.0),
         child: NesContainer(
           width: double.infinity,
-          label: '$positionName',
+          label: 'Decorations for $positionName',
           child: ListView.builder(
             itemCount: assetsForSlot.length + 1,
             itemBuilder: (context, index) {
+              // 'None' option
               if (index == 0) {
-                // 'None' option
                 final bool isSelected = currentAssetInSlot == null;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: InkWell(
                     onTap: () => _onDecorationSelected(null, int.parse(_selectedPositionKey!.split('_')[0]), int.parse(_selectedPositionKey!.split('_')[1])),
-                    child: NesContainer(
+                    child: Container(
                       padding: const EdgeInsets.all(12.0),
-                      backgroundColor: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
+                      color: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
                       child: const Row(
                         children: [
                           Text('None'),
@@ -130,25 +132,47 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
               final asset = assetsForSlot[index - 1];
               final bool isSelected = currentAssetInSlot?.url == asset.url;
+              
+              bool isLocked = false;
+              String lockText = "";
+              if (asset.unlock != null) {
+                if (asset.unlock!.type == 'level') {
+                  if (widget.userLevel < asset.unlock!.value) {
+                    isLocked = true;
+                    lockText = "Lvl ${asset.unlock!.value}";
+                  }
+                } else if (asset.unlock!.type == 'paid') {
+                  // For now, we assume paid items are locked unless we have a mechanism
+                  // to check for purchases.
+                  isLocked = true;
+                  lockText = "${asset.unlock!.value} SOL";
+                }
+              }
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
+              return Opacity(
+                opacity: isLocked ? 0.5 : 1.0,
                 child: InkWell(
-                  onTap: () => _onDecorationSelected(asset, asset.row, asset.col),
-                  child: NesContainer(
+                  onTap: isLocked ? null : () => _onDecorationSelected(asset, asset.row, asset.col),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 4.0),
                     padding: const EdgeInsets.all(8.0),
-                    backgroundColor: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
+                    color: isSelected ? Colors.green.withOpacity(0.3) : Colors.transparent,
                     child: Row(
                       children: [
                         Text(asset.name),
                         const Spacer(),
-                        Image.network(
-                          'http://10.0.2.2:3000${asset.url}',
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.contain,
-                          errorBuilder: (ctx, err, st) => const Icon(Icons.error),
-                        ),
+                        if (isLocked) ...[
+                          Text(lockText, style: const TextStyle(color: Colors.red)),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.lock, color: Colors.red, size: 20),
+                        ] else
+                          Image.network(
+                            'http://10.0.2.2:3000${asset.url}',
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.contain,
+                            errorBuilder: (ctx, err, st) => const Icon(Icons.error),
+                          ),
                       ],
                     ),
                   ),

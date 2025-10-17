@@ -1,6 +1,12 @@
 import express from 'express';
 import { openDb } from '../db/database.js';
 import { Database } from 'sqlite';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -102,8 +108,8 @@ router.post('/', async (req, res) => {
 
     const now = new Date().toISOString();
     await req.db.run(
-      'INSERT INTO solmates (pubkey, name, animal, last_fed_at, last_pet_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [pubkey, name, animal, now, now, now, now]
+      'INSERT INTO solmates (pubkey, name, level, animal, last_fed_at, last_pet_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [pubkey, name, 1, animal, now, now, now, now]
     );
 
     const newSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
@@ -211,6 +217,34 @@ router.post('/decorations', async (req, res) => {
   const db = req.db;
 
   try {
+    // --- Security Validation Step ---
+    const solmate = await db.get('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    if (!solmate) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const userLevel = solmate.level;
+
+    const manifestPath = path.join(__dirname, '..', 'assets', 'decorations', 'manifest.json');
+    const manifestContent = await fs.readFile(manifestPath, 'utf-8');
+    const manifest = JSON.parse(manifestContent);
+
+    for (const row of decorations) {
+      for (const asset of row) {
+        if (!asset) continue;
+
+        const manifestItem = manifest.find((item: any) => item.url === asset.url || `/assets/decorations/${item.filename}` === asset.url);
+        
+        if (manifestItem && manifestItem.unlock) {
+          if (manifestItem.unlock.type === 'level' && userLevel < manifestItem.unlock.level) {
+            return res.status(403).json({ error: `Attempted to equip a locked item: ${asset.name}. Required level: ${manifestItem.unlock.level}` });
+          }
+          // TODO: Add validation for 'paid' items once payment tracking is implemented
+        }
+      }
+    }
+    // --- End Security Validation ---
+
+
     // Use a transaction to ensure atomicity
     await db.exec('BEGIN TRANSACTION');
 

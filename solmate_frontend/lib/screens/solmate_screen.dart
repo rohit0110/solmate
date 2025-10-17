@@ -33,6 +33,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   late String _solmateNameDisplay;
   int _health = 100;
   int _happiness = 100;
+  int _level = 1;
   bool _isHappy = false;
   String _message = "Welcome to your Solmate!";
   bool _isLoading = true;
@@ -90,6 +91,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
       setState(() {
         _health = data['health'];
         _happiness = data['happiness'];
+        _level = data['level'] ?? 1;
         _solmateNameDisplay = data['name'] ?? widget.solmateName;
         _selectedDecorations = newDecorations; // Update the flat list
         if (_health <= 0) {
@@ -392,7 +394,10 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                 final updatedDecorations = await Navigator.push<List<DecorationAsset>>(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MarketplaceScreen(initialSelectedDecorations: _selectedDecorations),
+                                    builder: (context) => MarketplaceScreen(
+                                      initialSelectedDecorations: _selectedDecorations,
+                                      userLevel: _level,
+                                    ),
                                   ),
                                 );
                                 if (updatedDecorations != null) {

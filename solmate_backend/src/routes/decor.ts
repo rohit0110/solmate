@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
       col: asset.col,
       name: asset.name,
       url: `/assets/decorations/${asset.filename}`,
+      unlock: asset.unlock, // Include the unlock condition
     }));
 
     res.json(decorations);
