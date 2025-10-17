@@ -79,4 +79,22 @@ class SolmateBackendApi {
       throw Exception('Failed to save decorations: ${response.body}');
     }
   }
+
+  Future<void> saveSelectedBackground(String pubkey, String backgroundUrl) async {
+    final url = Uri.parse('$baseUrl/api/solmate/background');
+    final body = jsonEncode({
+      'pubkey': pubkey,
+      'backgroundUrl': backgroundUrl,
+    });
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to save background: ${response.body}');
+    }
+  }
 }

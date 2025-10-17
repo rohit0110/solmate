@@ -26,6 +26,7 @@ export async function openDb(): Promise<Database> {
         name VARCHAR(20) NOT NULL,
         level INTEGER NOT NULL,
         animal VARCHAR(50) NOT NULL,
+        selected_background VARCHAR(255),
         last_fed_at TIMESTAMP WITH TIME ZONE NOT NULL,
         last_pet_at TIMESTAMP WITH TIME ZONE NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -51,6 +52,12 @@ export async function openDb(): Promise<Database> {
     // Added NOT NULL and a DEFAULT value to avoid constraint violations on existing rows.
     await db.exec('ALTER TABLE solmates ADD COLUMN level INTEGER NOT NULL DEFAULT 1');
     console.log('Added "level" column to solmates table.');
+  }
+
+  const hasBackgroundColumn = columns.some((c: any) => c.name === 'selected_background');
+  if (!hasBackgroundColumn) {
+    await db.exec('ALTER TABLE solmates ADD COLUMN selected_background VARCHAR(255)');
+    console.log('Added "selected_background" column to solmates table.');
   }
 
   console.log('Database tables are ready.');

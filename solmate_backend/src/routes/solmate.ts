@@ -107,9 +107,10 @@ router.post('/', async (req, res) => {
     }
 
     const now = new Date().toISOString();
+    const defaultBackground = '/assets/background/background_day.png';
     await req.db.run(
-      'INSERT INTO solmates (pubkey, name, level, animal, last_fed_at, last_pet_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [pubkey, name, 1, animal, now, now, now, now]
+      'INSERT INTO solmates (pubkey, name, level, animal, last_fed_at, last_pet_at, created_at, updated_at, selected_background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [pubkey, name, 1, animal, now, now, now, now, defaultBackground]
     );
 
     const newSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
@@ -273,6 +274,50 @@ router.post('/decorations', async (req, res) => {
   } catch (error) {
     await db.exec('ROLLBACK');
     console.error('Error saving decorations:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/background', async (req, res) => {
+  const { pubkey, backgroundUrl } = req.body;
+
+  if (!pubkey || !backgroundUrl) {
+    return res.status(400).json({ error: 'pubkey and backgroundUrl are required' });
+  }
+
+  const db = req.db;
+
+  try {
+    // --- Security Validation Step ---
+    const solmate = await db.get('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    if (!solmate) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const userLevel = solmate.level;
+
+    const manifestPath = path.join(__dirname, '..', 'assets', 'background', 'manifest.json');
+    const manifestContent = await fs.readFile(manifestPath, 'utf-8');
+    const manifest = JSON.parse(manifestContent);
+
+    const bgManifestItem = manifest.find((item: any) => `/assets/background/${item.filename}` === backgroundUrl);
+
+    if (!bgManifestItem) {
+        return res.status(404).json({ error: 'Selected background not found in manifest.' });
+    }
+
+    if (bgManifestItem.unlock) {
+        if (bgManifestItem.unlock.type === 'level' && userLevel < bgManifestItem.unlock.level) {
+            return res.status(403).json({ error: `Attempted to equip a locked background. Required level: ${bgManifestItem.unlock.level}` });
+        }
+        // TODO: Add validation for 'paid' items
+    }
+    // --- End Security Validation ---
+
+    await db.run('UPDATE solmates SET selected_background = ? WHERE pubkey = ?', [backgroundUrl, pubkey]);
+
+    res.status(200).json({ message: 'Background saved successfully' });
+  } catch (error) {
+    console.error('Error saving background:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

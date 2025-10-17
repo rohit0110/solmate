@@ -57,6 +57,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
 
   // New state for decorations: a flat list
   List<DecorationAsset> _selectedDecorations = [];
+  String? _selectedBackgroundUrl;
 
   @override
   void initState() {
@@ -94,6 +95,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
         _level = data['level'] ?? 1;
         _solmateNameDisplay = data['name'] ?? widget.solmateName;
         _selectedDecorations = newDecorations; // Update the flat list
+        _selectedBackgroundUrl = data['selected_background'];
         if (_health <= 0) {
           _message = "Solmate has perished! RIP $_solmateNameDisplay";
         } else {
@@ -280,13 +282,14 @@ class _SolmateScreenState extends State<SolmateScreen> {
                             return Stack(
                               children: [
                                 // Background Layer
-                                Image.asset(
-                                  'assets/sprites/background.png',
-                                  width: gridDisplaySize,
-                                  height: gridDisplaySize,
-                                  fit: BoxFit.cover,
-                                  filterQuality: FilterQuality.none,
-                                ),
+                                if (_selectedBackgroundUrl != null)
+                                  Image.network(
+                                    'http://10.0.2.2:3000$_selectedBackgroundUrl',
+                                    width: gridDisplaySize,
+                                    height: gridDisplaySize,
+                                    fit: BoxFit.cover,
+                                    filterQuality: FilterQuality.none,
+                                  ),
 
                                 // Decorations layer
                                 ..._selectedDecorations.map((asset) {
@@ -391,31 +394,24 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                   });
                                   return;
                                 }
-                                final updatedDecorations = await Navigator.push<List<DecorationAsset>>(
+                                final result = await Navigator.push<MarketplaceResult>(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => MarketplaceScreen(
                                       initialSelectedDecorations: _selectedDecorations,
+                                      initialSelectedBackground: _selectedBackgroundUrl,
                                       userLevel: _level,
+                                      pubkey: widget.publicKey,
                                     ),
                                   ),
                                 );
-                                if (updatedDecorations != null) {
-                                  setState(() {
-                                    _selectedDecorations = updatedDecorations;
-                                    _message = "Saving decorations...";
-                                  });
 
-                                  try {
-                                    await _api.saveDecorations(widget.publicKey, updatedDecorations);
-                                    setState(() {
-                                      _message = "Decorations saved!";
-                                    });
-                                  } catch (e) {
-                                    setState(() {
-                                      _message = "Failed to save decorations: $e";
-                                    });
-                                  }
+                                if (result != null) {
+                                  setState(() {
+                                    _selectedDecorations = result.decorations;
+                                    _selectedBackgroundUrl = result.backgroundUrl;
+                                    _message = "Changes saved!";
+                                  });
                                 }
                               },
                             ),
