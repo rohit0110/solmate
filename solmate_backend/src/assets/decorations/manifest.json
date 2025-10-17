@@ -1,0 +1,56 @@
+[
+  {
+    "row": 2,
+    "col": 0,
+    "name": "chair",
+    "filename": "chair.png"
+  },
+  {
+    "row": 2,
+    "col": 2,
+    "name": "plant",
+    "filename": "plant.png"
+  },
+  {
+    "row": 1,
+    "col": 1,
+    "name": "painting",
+    "filename": "painting.png"
+  },
+  {
+    "row": 1,
+    "col": 1,
+    "name": "painting1",
+    "filename": "painting.png"
+  },
+  {
+    "row": 1,
+    "col": 1,
+    "name": "painting2",
+    "filename": "chandelier.png"
+  },
+  {
+    "row": 1,
+    "col": 1,
+    "name": "painting3",
+    "filename": "plant.png"
+  },
+  {
+    "row": 1,
+    "col": 1,
+    "name": "painting4",
+    "filename": "chair.png"
+  },
+  {
+    "row": 1,
+    "col": 2,
+    "name": "painting",
+    "filename": "painting.png"
+  },
+  {
+    "row": 0,
+    "col": 1,
+    "name": "chandelier",
+    "filename": "chandelier.png"
+  }
+]
