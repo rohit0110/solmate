@@ -9,16 +9,26 @@ router.get('/', async (req, res) => {
 
   try {
     const db = await openDb();
+    // Use DENSE_RANK for fair ranking with a timestamp tie-breaker.
+    // This query gets all players ranked 20 or less.
     const topPlayers = await db.all(
-      'SELECT pubkey, name, run_highscore, animal FROM solmates ORDER BY run_highscore DESC LIMIT 20'
+      `SELECT * FROM (
+        SELECT
+          pubkey, name, run_highscore, animal, updated_at,
+          DENSE_RANK() OVER (ORDER BY run_highscore DESC, updated_at ASC) as rank
+        FROM solmates
+        WHERE run_highscore > 0
+      )
+      WHERE rank <= 20
+      ORDER BY rank ASC, updated_at ASC`
     );
 
     const leaderboard = await Promise.all(
-      topPlayers.map(async (player, index) => {
+      topPlayers.map(async (player) => {
         try {
           const sprite = await generateNormalSprite(player.animal, player.pubkey);
           return {
-            rank: index + 1,
+            rank: player.rank,
             pubkey: player.pubkey,
             name: player.name,
             run_highscore: player.run_highscore,
@@ -27,7 +37,7 @@ router.get('/', async (req, res) => {
         } catch (error) {
           console.error(`Failed to generate sprite for ${player.pubkey}:`, error);
           return {
-            rank: index + 1,
+            rank: player.rank,
             pubkey: player.pubkey,
             name: player.name,
             run_highscore: player.run_highscore,
@@ -39,16 +49,22 @@ router.get('/', async (req, res) => {
 
     let user = null;
     if (userPubkey) {
-      const userInTop20 = leaderboard.some(p => p.pubkey === userPubkey);
-      if (!userInTop20) {
+      const userInTopList = leaderboard.some(p => p.pubkey === userPubkey);
+      if (!userInTopList) {
+        // If user is not in the top list, get their specific rank.
         const userRow = await db.get(
-          `SELECT pubkey, name, run_highscore, animal,
-           (SELECT COUNT(*) + 1 FROM solmates s2 WHERE s2.run_highscore > s1.run_highscore) as rank
-           FROM solmates s1 WHERE s1.pubkey = ?`,
+          `SELECT * FROM (
+            SELECT
+              pubkey, name, run_highscore, animal,
+              DENSE_RANK() OVER (ORDER BY run_highscore DESC, updated_at ASC) as rank
+            FROM solmates
+            WHERE run_highscore > 0
+          )
+          WHERE pubkey = ?`,
           userPubkey
         );
 
-        if (userRow && userRow.run_highscore > 0) {
+        if (userRow) {
           try {
             const sprite = await generateNormalSprite(userRow.animal, userRow.pubkey);
             user = {
