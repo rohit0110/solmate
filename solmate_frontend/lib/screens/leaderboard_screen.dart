@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../api/leaderboard_api.dart';
 import '../models/leaderboard_entry.dart';
@@ -16,6 +18,51 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   void initState() {
     super.initState();
     _leaderboardFuture = LeaderboardApi.getLeaderboard();
+  }
+
+  Widget _getLeadingWidget(LeaderboardEntry entry, int position) {
+    final rank = Text(
+      '$position',
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+      ),
+    );
+
+    Widget spriteWidget;
+    if (entry.sprite == null) {
+      // Give the icon a fixed size to match the image
+      spriteWidget = const SizedBox(width: 40, height: 40, child: Icon(Icons.person));
+    } else {
+      final imageBytes = base64Decode(entry.sprite!);
+      spriteWidget = Image.memory(
+        imageBytes,
+        width: 40,
+        height: 40,
+        filterQuality: FilterQuality.none,
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(  
+          margin: EdgeInsets.symmetric(vertical: 5), 
+          constraints: BoxConstraints(minWidth: 50), 
+          decoration: BoxDecoration(
+            border: Border(
+              right: BorderSide(
+                color: Colors.black,
+              )
+            )
+          ),     
+          alignment: Alignment.centerLeft,
+          child: rank,
+        ),
+        const SizedBox(width: 10),
+        spriteWidget,
+      ],
+    );
   }
 
   @override
@@ -42,13 +89,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 return Card(
                   color: _getCardColor(position),
                   child: ListTile(
-                    leading: Text(
-                      '$position',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
+                    leading: _getLeadingWidget(entry, position),
                     title: Text(
                       entry.name,
                       style: const TextStyle(
