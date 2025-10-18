@@ -1,4 +1,5 @@
 
+
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -38,8 +39,8 @@ class _RunGameScreenState extends State<RunGameScreen> {
 
   List<double> obstacleX = [400.0, 700.0];
   int score = 0;
+  late int _highScore;
   bool isGameOver = false;
-  bool _isSubmitting = false;
   Timer? gameLoopTimer;
   double gameAreaHeight = 0;
 
@@ -52,6 +53,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
   @override
   void initState() {
     super.initState();
+    _highScore = widget.highScore;
     startGame();
   }
 
@@ -62,7 +64,6 @@ class _RunGameScreenState extends State<RunGameScreen> {
       obstacleX = [400.0, 700.0];
       score = 0;
       isGameOver = false;
-      _isSubmitting = false;
       gameLoopTimer?.cancel();
       gameLoopTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
         if (!isGameOver) {
@@ -86,14 +87,10 @@ class _RunGameScreenState extends State<RunGameScreen> {
       // Update obstacle positions
       for (int i = 0; i < obstacleX.length; i++) {
         obstacleX[i] -= gameSpeed * deltaTime;
-        if (obstacleX[i] < -obstacleWidth) {
-          obstacleX[i] = 800.0; // Reset obstacle position
-          score++;
-        }
       }
 
       // Check for collision (use a constrained game area so visuals sit near middle)
-  final double screenW = MediaQuery.of(context).size.width;
+      final double screenW = MediaQuery.of(context).size.width;
 
       final playerRect = Rect.fromLTWH(
         50,
@@ -113,11 +110,19 @@ class _RunGameScreenState extends State<RunGameScreen> {
         if (playerRect.overlaps(obstacleRect)) {
           isGameOver = true;
           gameLoopTimer?.cancel();
+          if (score > widget.highScore) {
+            _api.run(widget.pubKey, score).catchError((e) {
+              print("Failed to submit score automatically: $e");
+            });
+          }
         }
         if (x < -obstacleWidth) {
           // reset obstacle off the right edge
           obstacleX[i] = screenW + 100.0;
           score++;
+          if (score > _highScore) {
+            _highScore = score;
+          }
         }
       }
     });
@@ -131,22 +136,9 @@ class _RunGameScreenState extends State<RunGameScreen> {
     }
   }
 
-  Future<void> _submitScoreAndExit() async {
-    if (_isSubmitting) return;
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
-    try {
-      await _api.run(widget.pubKey, score);
-    } catch (e) {
-      // Optionally, show an error message to the user
-      print("Failed to submit score: $e");
-    } finally {
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+  void _exitGame() {
+    if (mounted) {
+      Navigator.of(context).pop(_highScore);
     }
   }
 
@@ -229,7 +221,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
                       top: 10,
                       right: 10,
                       child: Text(
-                        'HI: ${widget.highScore}',
+                        'HI: $_highScore',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -283,14 +275,8 @@ class _RunGameScreenState extends State<RunGameScreen> {
                               const SizedBox(height: 10),
                               NesButton(
                                 type: NesButtonType.normal,
-                                onPressed: _isSubmitting ? null : _submitScoreAndExit,
-                                child: _isSubmitting
-                                    ? const SizedBox(
-                                        width: 24,
-                                        height: 24,
-                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                      )
-                                    : const Text('Back to Solmate'),
+                                onPressed: _exitGame,
+                                child: const Text('Back to Solmate'),
                               ),
                             ],
                           ),

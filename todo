@@ -12,12 +12,12 @@ DONE:
 [x] add level locking of decoration items
 [x] HIGH: Web3 logic for log in and use that public key
 [x] MEDIUM: Add logic to change background, level up asset essentially
+[x] MEDIUM: add leaderboard with top scores in run_game_screen
 
 TODO:
 [] LOW: run_game_screen needs more robust logic for obstacles
 [] LOW: run_game_screen needs background ui in game screen
 [] LOW: run_game_screen needs something at bottom of screen which is empty
-[] MEDIUM: add leaderboard with top scores in run_game_screen
 [] MEDIUM: add small buttons in widget to eat and shit
 [] LOW: fix solmate_screen widget heart and happiness to be pixelated
 [] MEDIUM: share button to generate a card you can post on twitter etc
@@ -30,3 +30,4 @@ TODO:
 [] LOW: Utilize auth token from MWA so repeated requests arent made
 [] LOW: Add ratelimiting
 [] MEDIUM: Text on the Solmate_screen feels very fidgety and wonky whenever interactions take place
+[] LOW: Transition from marketplace to solmate screen feels wonky because of loading screen flashing for brief second

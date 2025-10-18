@@ -12,7 +12,8 @@
     "death": "node --loader ts-node/esm scripts/set-death.ts",
     "sucide": "node --loader ts-node/esm scripts/set-suicidal.ts",
     "normal": "node --loader ts-node/esm scripts/set-normal.ts",
-    "level": "node --loader ts-node/esm scripts/set-level.ts"
+    "level": "node --loader ts-node/esm scripts/set-level.ts",
+    "players": "node --loader ts-node/esm scripts/set-leaderboard.ts"
   },
   "keywords": [],
   "author": "",
