@@ -53,6 +53,19 @@ class SolmateBackendApi {
     }
   }
 
+  Future<Map<String, dynamic>> run(String pubkey, int score) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/solmate/run'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'pubkey': pubkey, 'score': score}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to submit run score: ${response.body}');
+    }
+  }
+
   Future<void> saveDecorations(String pubkey, List<DecorationAsset> decorations) async {
     // Convert the flat list of decorations into a 2D grid for the backend.
     final grid = List.generate(3, (_) => List<DecorationAsset?>.generate(3, (_) => null));

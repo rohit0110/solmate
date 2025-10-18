@@ -11,6 +11,7 @@ DONE:
 [x] Take into account onscreen keyboard when typing name
 [x] add level locking of decoration items
 [x] HIGH: Web3 logic for log in and use that public key
+[x] MEDIUM: Add logic to change background, level up asset essentially
 
 TODO:
 [] LOW: run_game_screen needs more robust logic for obstacles
@@ -26,5 +27,6 @@ TODO:
 [] HIGH: level up logic CRON in backend needs to get added
 [] HIGH: Mint NFT in metaplex
 [] HIGH: Special solmate logic for tuli
-[] MEDIUM: Add logic to change background, level up asset essentially
 [] LOW: Utilize auth token from MWA so repeated requests arent made
+[] LOW: Add ratelimiting
+[] MEDIUM: Text on the Solmate_screen feels very fidgety and wonky whenever interactions take place

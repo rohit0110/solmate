@@ -3,13 +3,19 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
+import 'package:solmate_frontend/api/solmate_api.dart';
+import 'package:solmate_frontend/screens/leaderboard_screen.dart';
 
 class RunGameScreen extends StatefulWidget {
   final Uint8List solmateImageBytes;
+  final String pubKey;
+  final int highScore;
 
   const RunGameScreen({
-    super.key, 
+    super.key,
     required this.solmateImageBytes,
+    required this.pubKey,
+    required this.highScore,
   });
 
   @override
@@ -17,6 +23,7 @@ class RunGameScreen extends StatefulWidget {
 }
 
 class _RunGameScreenState extends State<RunGameScreen> {
+  final SolmateBackendApi _api = SolmateBackendApi();
   static const double playerWidth = 50.0;
   static const double playerHeight = 50.0;
   static const double obstacleWidth = 30.0;
@@ -32,6 +39,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
   List<double> obstacleX = [400.0, 700.0];
   int score = 0;
   bool isGameOver = false;
+  bool _isSubmitting = false;
   Timer? gameLoopTimer;
   double gameAreaHeight = 0;
 
@@ -48,16 +56,19 @@ class _RunGameScreenState extends State<RunGameScreen> {
   }
 
   void startGame() {
-    playerY = 0;
-    playerVelocityY = 0;
-    obstacleX = [400.0, 700.0];
-    score = 0;
-    isGameOver = false;
-    gameLoopTimer?.cancel();
-    gameLoopTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (!isGameOver) {
-        updateGame(16 / 1000.0);
-      }
+    setState(() {
+      playerY = 0;
+      playerVelocityY = 0;
+      obstacleX = [400.0, 700.0];
+      score = 0;
+      isGameOver = false;
+      _isSubmitting = false;
+      gameLoopTimer?.cancel();
+      gameLoopTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+        if (!isGameOver) {
+          updateGame(16 / 1000.0);
+        }
+      });
     });
   }
 
@@ -120,6 +131,25 @@ class _RunGameScreenState extends State<RunGameScreen> {
     }
   }
 
+  Future<void> _submitScoreAndExit() async {
+    if (_isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await _api.run(widget.pubKey, score);
+    } catch (e) {
+      // Optionally, show an error message to the user
+      print("Failed to submit score: $e");
+    } finally {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
   @override
   void dispose() {
     gameLoopTimer?.cancel();
@@ -136,7 +166,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
       backgroundColor: colorScheme.background,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: isGameOver ? startGame : jump,
+        onTap: isGameOver ? null : jump, // Disable jump when game is over
         child: Align(
           alignment: Alignment.topCenter,
           child: Padding(
@@ -194,6 +224,19 @@ class _RunGameScreenState extends State<RunGameScreen> {
                         ),
                       ),
                     ),
+                    // High Score
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Text(
+                        'HI: ${widget.highScore}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onBackground,
+                        ),
+                      ),
+                    ),
                     // Game Over Message
                     if (isGameOver)
                       Center(
@@ -229,9 +272,25 @@ class _RunGameScreenState extends State<RunGameScreen> {
                               NesButton(
                                 type: NesButtonType.normal,
                                 onPressed: () {
-                                  Navigator.of(context).pop();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const LeaderboardScreen(),
+                                    ),
+                                  );
                                 },
-                                child: const Text('Back to Solmate'),
+                                child: const Text('Leaderboard'),
+                              ),
+                              const SizedBox(height: 10),
+                              NesButton(
+                                type: NesButtonType.normal,
+                                onPressed: _isSubmitting ? null : _submitScoreAndExit,
+                                child: _isSubmitting
+                                    ? const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      )
+                                    : const Text('Back to Solmate'),
                               ),
                             ],
                           ),

@@ -25,6 +25,8 @@ export async function openDb(): Promise<Database> {
         pubkey VARCHAR(255) PRIMARY KEY,
         name VARCHAR(20) NOT NULL,
         level INTEGER NOT NULL,
+        xp INTEGER NOT NULL DEFAULT 0,
+        run_highscore INTEGER NOT NULL DEFAULT 0,
         animal VARCHAR(50) NOT NULL,
         selected_background VARCHAR(255),
         last_fed_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -45,21 +47,28 @@ export async function openDb(): Promise<Database> {
     );
   `);
 
-  // Add level column if it doesn't exist for existing tables
+  // Add columns if they don't exist for existing tables
   const columns = await db.all('PRAGMA table_info(solmates)');
-  const hasLevelColumn = columns.some((c: any) => c.name === 'level');
-  if (!hasLevelColumn) {
-    // Added NOT NULL and a DEFAULT value to avoid constraint violations on existing rows.
+  const columnNames = columns.map((c: any) => c.name);
+
+  if (!columnNames.includes('level')) {
     await db.exec('ALTER TABLE solmates ADD COLUMN level INTEGER NOT NULL DEFAULT 1');
     console.log('Added "level" column to solmates table.');
   }
-
-  const hasBackgroundColumn = columns.some((c: any) => c.name === 'selected_background');
-  if (!hasBackgroundColumn) {
+  if (!columnNames.includes('xp')) {
+    await db.exec('ALTER TABLE solmates ADD COLUMN xp INTEGER NOT NULL DEFAULT 0');
+    console.log('Added "xp" column to solmates table.');
+  }
+  if (!columnNames.includes('run_highscore')) {
+    await db.exec('ALTER TABLE solmates ADD COLUMN run_highscore INTEGER NOT NULL DEFAULT 0');
+    console.log('Added "run_highscore" column to solmates table.');
+  }
+  if (!columnNames.includes('selected_background')) {
     await db.exec('ALTER TABLE solmates ADD COLUMN selected_background VARCHAR(255)');
     console.log('Added "selected_background" column to solmates table.');
   }
 
   console.log('Database tables are ready.');
+
   return db;
 }
