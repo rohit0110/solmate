@@ -27,7 +27,7 @@ async function seedLeaderboard() {
       const pubkey = generateRandomPubkey();
       const name = names[i % names.length] + (Math.floor(i / names.length) > 0 ? ` ${Math.floor(i / names.length) + 1}` : '');
       const level = Math.floor(Math.random() * 50) + 1; // Random level between 1 and 50
-      const run_highscore = Math.floor(Math.random() * 10000) + 100; // Random score between 100 and 10100
+      const run_highscore = Math.floor(Math.random() * 10);
       const animal = 'dragon'; // Default animal
       const now = new Date().toISOString();
 

@@ -449,7 +449,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                     MaterialPageRoute(
                                       builder: (context) => RunGameScreen(
                                         solmateImageBytes: _normalSpriteBytes!,
-                                        pubKey: widget.publicKey,
+                                        pubkey: widget.publicKey,
                                         highScore: _runHighscore,
                                       ),
                                     ),

@@ -1,12 +1,22 @@
 class LeaderboardEntry {
+  final int rank;
+  final String pubkey;
   final String name;
   final int score;
-  final String? sprite; // Can be null if sprite generation failed
+  final String? sprite;
 
-  LeaderboardEntry({required this.name, required this.score, this.sprite});
+  LeaderboardEntry({
+    required this.rank,
+    required this.pubkey,
+    required this.name,
+    required this.score,
+    this.sprite,
+  });
 
   factory LeaderboardEntry.fromJson(Map<String, dynamic> json) {
     return LeaderboardEntry(
+      rank: json['rank'],
+      pubkey: json['pubkey'],
       name: json['name'],
       score: json['run_highscore'],
       sprite: json['sprite'],

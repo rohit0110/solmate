@@ -9,13 +9,13 @@ import 'package:solmate_frontend/screens/leaderboard_screen.dart';
 
 class RunGameScreen extends StatefulWidget {
   final Uint8List solmateImageBytes;
-  final String pubKey;
+  final String pubkey;
   final int highScore;
 
   const RunGameScreen({
     super.key,
     required this.solmateImageBytes,
-    required this.pubKey,
+    required this.pubkey,
     required this.highScore,
   });
 
@@ -111,7 +111,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
           isGameOver = true;
           gameLoopTimer?.cancel();
           if (score > widget.highScore) {
-            _api.run(widget.pubKey, score).catchError((e) {
+            _api.run(widget.pubkey, score).catchError((e) {
               print("Failed to submit score automatically: $e");
             });
           }
@@ -266,7 +266,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (context) => const LeaderboardScreen(),
+                                      builder: (context) => LeaderboardScreen(pubkey: widget.pubkey),
                                     ),
                                   );
                                 },
