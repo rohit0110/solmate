@@ -1,18 +1,30 @@
-[] run_game_screen needs more robust logic for obstacles
-[] run_game_screen needs background ui in game screen
-[] run_game_screen needs something at bottom of screen which is empty
-[] add leaderboard with top scores in run_game_screen
-[] add market place
+DONE:
+[x] add market place
 [x] need to procedurally generate pixels on base sprite from pubkey in backend
 [x] need to fix issue in widget not updating sprite
-[] add small buttons in widget to eat and shit
-[] fix solmate_screen widget heart and happiness to be pixelated
-[] share button to generate a card you can post on twitter etc
 [x] go through idea of stats of solmate. what stats are associated with what. whether widget needs buttons or just opens up the app? Thoughts on decoration of env rather than adding accessories to solmate as rewards.
 [x] Feed = +Hunger, Pet = +Hap, If Hap < 50 no emotes, if Hunger == 0, death. Implement logic in backend
 [x] Back button from solmate_screen needs to go somewhere or close app
 [x] determine rate of decay for health and happiness. At 0 happiness refuse to eat or get pet. At 0 health, perish. Need logic for that
-[] cant spam feeds for health
-[] max name length 20
+[x] max name length 20
 [x] whenever solmate_screen loads from another page it should resync with backend
-[] Take into account onscreen keyboard when typing name
+[x] Take into account onscreen keyboard when typing name
+[x] add level locking of decoration items
+[x] HIGH: Web3 logic for log in and use that public key
+
+TODO:
+[] LOW: run_game_screen needs more robust logic for obstacles
+[] LOW: run_game_screen needs background ui in game screen
+[] LOW: run_game_screen needs something at bottom of screen which is empty
+[] MEDIUM: add leaderboard with top scores in run_game_screen
+[] MEDIUM: add small buttons in widget to eat and shit
+[] LOW: fix solmate_screen widget heart and happiness to be pixelated
+[] MEDIUM: share button to generate a card you can post on twitter etc
+[] LOW: cant spam feeds for health
+[] HIGH: add paywall of decoration items
+[] LOW: level doesnt get updated if already in solmate_screen
+[] HIGH: level up logic CRON in backend needs to get added
+[] HIGH: Mint NFT in metaplex
+[] HIGH: Special solmate logic for tuli
+[] MEDIUM: Add logic to change background, level up asset essentially
+[] LOW: Utilize auth token from MWA so repeated requests arent made

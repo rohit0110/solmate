@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:nes_ui/nes_ui.dart';
 import 'package:solmate_frontend/api/solmate_api.dart';
+import 'package:solmate_frontend/models/decoration_asset.dart';
 import 'package:solmate_frontend/screens/run_game_screen.dart';
 import 'package:solmate_frontend/screens/marketplace_screen.dart';
 import 'package:solmate_frontend/screens/home_screen.dart';
@@ -32,6 +33,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   late String _solmateNameDisplay;
   int _health = 100;
   int _happiness = 100;
+  int _level = 1;
   bool _isHappy = false;
   String _message = "Welcome to your Solmate!";
   bool _isLoading = true;
@@ -53,8 +55,9 @@ class _SolmateScreenState extends State<SolmateScreen> {
     return _deadMessages[random.nextInt(_deadMessages.length)];
   }
 
-  // New state for accessories
-  List<List<bool>> _accessoryGrid = List.generate(3, (_) => List.generate(3, (_) => false));
+  // New state for decorations: a flat list
+  List<DecorationAsset> _selectedDecorations = [];
+  String? _selectedBackgroundUrl;
 
   @override
   void initState() {
@@ -73,10 +76,26 @@ class _SolmateScreenState extends State<SolmateScreen> {
   Future<void> _loadInitialData() async {
     try {
       final data = await _api.getSolmateData(widget.publicKey);
+      if (data == null) {
+        setState(() {
+          _message = "Could not find Solmate data.";
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final decorationsData = (data['decorations'] as List<dynamic>?) ?? [];
+      final newDecorations = decorationsData
+          .map((item) => DecorationAsset.fromJson(item as Map<String, dynamic>))
+          .toList();
+
       setState(() {
-        _health = data!['health'];
+        _health = data['health'];
         _happiness = data['happiness'];
+        _level = data['level'] ?? 1;
         _solmateNameDisplay = data['name'] ?? widget.solmateName;
+        _selectedDecorations = newDecorations; // Update the flat list
+        _selectedBackgroundUrl = data['selected_background'];
         if (_health <= 0) {
           _message = "Solmate has perished! RIP $_solmateNameDisplay";
         } else {
@@ -257,52 +276,52 @@ class _SolmateScreenState extends State<SolmateScreen> {
                         painterBuilder: NesContainerSquareCornerPainter.new,
                         child: LayoutBuilder(
                           builder: (context, constraints) {
-                            // constraints.maxWidth and constraints.maxHeight will now be nesContainerOuterDimension - (2 * 16.0)
-                            final gridDisplaySize = min(constraints.maxWidth, constraints.maxHeight); // Should be equal
+                            final gridDisplaySize = min(constraints.maxWidth, constraints.maxHeight);
                             final cellSize = gridDisplaySize / 3;
 
-                            return Stack( // New Stack for layering
+                            return Stack(
                               children: [
-                                // Background Layer (single sprite for the entire grid)
-                                Image.asset(
-                                  'assets/sprites/background.png', // Path to the new background image
-                                  width: gridDisplaySize,
-                                  height: gridDisplaySize,
-                                  fit: BoxFit.cover, // Cover the entire grid area
-                                  filterQuality: FilterQuality.none, // For pixel art style
-                                ),
+                                // Background Layer
+                                if (_selectedBackgroundUrl != null)
+                                  Image.network(
+                                    'http://10.0.2.2:3000$_selectedBackgroundUrl',
+                                    width: gridDisplaySize,
+                                    height: gridDisplaySize,
+                                    fit: BoxFit.cover,
+                                    filterQuality: FilterQuality.none,
+                                  ),
 
-                                // Grid Layer (Column of Rows)
-                                Column( // No need for Center or SizedBox here, it will fill LayoutBuilder
-                                  children: List.generate(3, (row) {
-                                    return Row(
-                                      children: List.generate(3, (col) {
-                                        return Container(
-                                          width: cellSize,
-                                          height: cellSize,
-                                          decoration: BoxDecoration(
-                                            // Removed: color: backgroundColor,
-                                            // Individual cells are now transparent to show the single background
-                                          ),
-                                          child: Stack(
-                                            children: [
-                                              // Accessories layer
-                                              if (_accessoryGrid[row][col] && !(row == 2 && col == 1))
-                                                Center(
-                                                  child: _buildSolmateImage(cellSize * 0.8), // Accessory
-                                                ),
+                                // Decorations layer
+                                ..._selectedDecorations.map((asset) {
+                                  if (asset.row == 2 && asset.col == 1) return const SizedBox.shrink();
+                                  
+                                  return Positioned(
+                                    top: asset.row * cellSize,
+                                    left: asset.col * cellSize,
+                                    width: cellSize,
+                                    height: cellSize,
+                                    child: Center(
+                                      child: Image.network(
+                                        'http://10.0.2.2:3000${asset.url}',
+                                        width: cellSize * 0.8,
+                                        height: cellSize * 0.8,
+                                        fit: BoxFit.contain,
+                                        filterQuality: FilterQuality.none,
+                                        errorBuilder: (ctx, err, st) => const Icon(Icons.error, color: Colors.red),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
 
-                                              // Solmate layer (only at [2][1])
-                                              if (row == 2 && col == 1)
-                                                Center(
-                                                  child: _buildSolmateImage(cellSize * 0.9, isHappy: _isHappy), // Solmate
-                                                ),
-                                            ],
-                                          ),
-                                        );
-                                      }),
-                                    );
-                                  }),
+                                // Solmate layer (always at [2][1])
+                                Positioned(
+                                  top: 2 * cellSize,
+                                  left: 1 * cellSize,
+                                  width: cellSize,
+                                  height: cellSize,
+                                  child: Center(
+                                    child: _buildSolmateImage(cellSize * 0.9, isHappy: _isHappy),
+                                  ),
                                 ),
                               ],
                             );
@@ -375,18 +394,25 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                   });
                                   return;
                                 }
-                                final updatedGrid = await Navigator.push<List<List<bool>>>(
+                                final result = await Navigator.push<MarketplaceResult>(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MarketplaceScreen(initialAccessoryGrid: _accessoryGrid),
+                                    builder: (context) => MarketplaceScreen(
+                                      initialSelectedDecorations: _selectedDecorations,
+                                      initialSelectedBackground: _selectedBackgroundUrl,
+                                      userLevel: _level,
+                                      pubkey: widget.publicKey,
+                                    ),
                                   ),
                                 );
-                                if (updatedGrid != null) {
+
+                                if (result != null) {
                                   setState(() {
-                                    _accessoryGrid = updatedGrid;
+                                    _selectedDecorations = result.decorations;
+                                    _selectedBackgroundUrl = result.backgroundUrl;
+                                    _message = "Changes saved!";
                                   });
                                 }
-                                _loadInitialData();
                               },
                             ),
                             _HardwareButton(

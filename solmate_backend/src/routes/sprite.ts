@@ -27,27 +27,21 @@ interface FeatureColor {
 }
 
 async function getOriginalColors(animal: string): Promise<FeatureColor[]> {
-  const colorFilePath = path.join(__dirname, '..', 'assets', 'colors.md');
+  const colorFilePath = path.join(__dirname, '..', 'assets', 'sprites','manifest.json');
   const colorFile = await fs.readFile(colorFilePath, 'utf-8');
-  const lines = colorFile.split('\n');
-  
-  const featureColors: FeatureColor[] = [];
-  let inCorrectSection = false;
-  const sectionHeader = `### ${animal.toUpperCase()}`;
+  const allColors = JSON.parse(colorFile);
 
-  for (const line of lines) {
-    if (line.startsWith('###')) { // A new animal section starts
-        inCorrectSection = line.trim() === sectionHeader;
-    }
-    
-    if (inCorrectSection && line.includes('- #')) {
-      const parts = line.split('-');
-      const feature = parts[0]!.trim();
-      const hex = parts[1]!.trim();
-      const rgb = hexToRgb(hex);
-      if (rgb) {
-        featureColors.push({ feature, originalColor: rgb });
-      }
+  const animalColors = allColors[animal.toUpperCase()];
+  if (!animalColors) {
+    return [];
+  }
+
+  const featureColors: FeatureColor[] = [];
+  for (const feature in animalColors) {
+    const hex = animalColors[feature];
+    const rgb = hexToRgb(hex);
+    if (rgb) {
+      featureColors.push({ feature, originalColor: rgb });
     }
   }
   return featureColors;

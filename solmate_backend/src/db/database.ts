@@ -24,21 +24,40 @@ export async function openDb(): Promise<Database> {
     CREATE TABLE IF NOT EXISTS solmates (
         pubkey VARCHAR(255) PRIMARY KEY,
         name VARCHAR(20) NOT NULL,
+        level INTEGER NOT NULL,
         animal VARCHAR(50) NOT NULL,
+        selected_background VARCHAR(255),
         last_fed_at TIMESTAMP WITH TIME ZONE NOT NULL,
         last_pet_at TIMESTAMP WITH TIME ZONE NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS selected_decorations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        solmate_pubkey VARCHAR(255) NOT NULL,
+        row INTEGER NOT NULL,
+        col INTEGER NOT NULL,
+        decoration_name VARCHAR(255) NOT NULL,
+        decoration_url VARCHAR(255) NOT NULL,
+        FOREIGN KEY (solmate_pubkey) REFERENCES solmates (pubkey) ON DELETE CASCADE,
+        UNIQUE (solmate_pubkey, row, col)
+    );
   `);
 
-  // Add name column if it doesn't exist for existing tables
+  // Add level column if it doesn't exist for existing tables
   const columns = await db.all('PRAGMA table_info(solmates)');
-  const hasNameColumn = columns.some((c: any) => c.name === 'name');
-  if (!hasNameColumn) {
+  const hasLevelColumn = columns.some((c: any) => c.name === 'level');
+  if (!hasLevelColumn) {
     // Added NOT NULL and a DEFAULT value to avoid constraint violations on existing rows.
-    await db.exec('ALTER TABLE solmates ADD COLUMN name VARCHAR(255) NOT NULL DEFAULT \'My Solmate\'');
-    console.log('Added "name" column to solmates table.');
+    await db.exec('ALTER TABLE solmates ADD COLUMN level INTEGER NOT NULL DEFAULT 1');
+    console.log('Added "level" column to solmates table.');
+  }
+
+  const hasBackgroundColumn = columns.some((c: any) => c.name === 'selected_background');
+  if (!hasBackgroundColumn) {
+    await db.exec('ALTER TABLE solmates ADD COLUMN selected_background VARCHAR(255)');
+    console.log('Added "selected_background" column to solmates table.');
   }
 
   console.log('Database tables are ready.');
