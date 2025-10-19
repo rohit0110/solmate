@@ -1,3 +1,17 @@
+class PaymentInfo {
+  final String recipientPublicKey;
+  final double amount;
+
+  PaymentInfo({required this.recipientPublicKey, required this.amount});
+
+  factory PaymentInfo.fromJson(Map<String, dynamic> json) {
+    return PaymentInfo(
+      recipientPublicKey: json['recipientPublicKey'],
+      amount: (json['amount'] as num).toDouble(),
+    );
+  }
+}
+
 class UnlockCondition {
   final String type;
   final dynamic value; // Can be int for level or double for amount
@@ -18,6 +32,8 @@ class DecorationAsset {
   final String name;
   final String url;
   final UnlockCondition? unlock;
+  final bool isUnlocked;
+  final PaymentInfo? paymentInfo;
 
   DecorationAsset({
     required this.row,
@@ -25,6 +41,8 @@ class DecorationAsset {
     required this.name,
     required this.url,
     this.unlock,
+    required this.isUnlocked,
+    this.paymentInfo,
   });
 
   factory DecorationAsset.fromJson(Map<String, dynamic> json) {
@@ -35,6 +53,10 @@ class DecorationAsset {
       url: json['url'] as String,
       unlock: json['unlock'] != null
           ? UnlockCondition.fromJson(json['unlock'])
+          : null,
+      isUnlocked: json['isUnlocked'] as bool,
+      paymentInfo: json['paymentInfo'] != null
+          ? PaymentInfo.fromJson(json['paymentInfo'])
           : null,
     );
   }

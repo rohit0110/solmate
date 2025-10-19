@@ -5,8 +5,8 @@ class BackgroundApi {
   // For Android emulator, 10.0.2.2 points to the host machine's localhost
   static const String _baseUrl = 'http://10.0.2.2:3000';
 
-  static Future<List<dynamic>> getBackgrounds() async {
-    final response = await http.get(Uri.parse('$_baseUrl/api/backgrounds'));
+  static Future<List<dynamic>> getBackgrounds(String pubkey) async {
+    final response = await http.get(Uri.parse('$_baseUrl/api/backgrounds?pubkey=$pubkey'));
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {

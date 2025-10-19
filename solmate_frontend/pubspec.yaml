@@ -40,6 +40,7 @@ dependencies:
   solana_mobile_client: ^0.1.2
   flutter_dotenv: ^6.0.0
   bs58: ^1.0.2
+  solana: ^0.31.2+1
 
 dev_dependencies:
   flutter_test:

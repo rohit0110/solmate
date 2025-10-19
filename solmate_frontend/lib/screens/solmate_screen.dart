@@ -14,6 +14,7 @@ class SolmateScreen extends StatefulWidget {
   final String animalName;
   final String solmateName;
   final String publicKey;
+  final String authToken;
   final Map<String, String>? solmateSprites;
 
   const SolmateScreen({
@@ -21,6 +22,7 @@ class SolmateScreen extends StatefulWidget {
     required this.animalName,
     required this.publicKey,
     required this.solmateName,
+    required this.authToken,
     this.solmateSprites,
   });
 
@@ -420,6 +422,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                       initialSelectedBackground: _selectedBackgroundUrl,
                                       userLevel: _level,
                                       pubkey: widget.publicKey,
+                                      authToken: widget.authToken,
                                     ),
                                   ),
                                 );

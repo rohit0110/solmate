@@ -45,6 +45,21 @@ export async function openDb(): Promise<Database> {
         FOREIGN KEY (solmate_pubkey) REFERENCES solmates (pubkey) ON DELETE CASCADE,
         UNIQUE (solmate_pubkey, row, col)
     );
+
+    CREATE TABLE IF NOT EXISTS unlocked_assets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_pubkey VARCHAR(255) NOT NULL,
+        asset_id VARCHAR(255) NOT NULL, -- e.g., 'decoration_chair' or 'background_day'
+        purchase_transaction_signature VARCHAR(255),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_pubkey) REFERENCES solmates (pubkey) ON DELETE CASCADE,
+        UNIQUE (user_pubkey, asset_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS processed_transactions (
+        signature VARCHAR(255) PRIMARY KEY,
+        processed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   // Add columns if they don't exist for existing tables
