@@ -4,6 +4,7 @@ import spriteRouter from './routes/sprite.js';
 import solmateRoutes from './routes/solmate.js';
 import decorRoutes from './routes/decor.js';
 import backgroundRoutes from './routes/background.js';
+import leaderboardRoutes from './routes/leaderboard.js';
 
 const app = express();
 
@@ -23,5 +24,6 @@ app.use('/api/sprite', spriteRouter);
 app.use('/api/solmate', solmateRoutes);
 app.use('/api/decor', decorRoutes);
 app.use('/api/backgrounds', backgroundRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 export default app;

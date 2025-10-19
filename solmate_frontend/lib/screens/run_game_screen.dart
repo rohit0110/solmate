@@ -1,15 +1,22 @@
 
+
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
+import 'package:solmate_frontend/api/solmate_api.dart';
+import 'package:solmate_frontend/screens/leaderboard_screen.dart';
 
 class RunGameScreen extends StatefulWidget {
   final Uint8List solmateImageBytes;
+  final String pubkey;
+  final int highScore;
 
   const RunGameScreen({
-    super.key, 
+    super.key,
     required this.solmateImageBytes,
+    required this.pubkey,
+    required this.highScore,
   });
 
   @override
@@ -17,6 +24,7 @@ class RunGameScreen extends StatefulWidget {
 }
 
 class _RunGameScreenState extends State<RunGameScreen> {
+  final SolmateBackendApi _api = SolmateBackendApi();
   static const double playerWidth = 50.0;
   static const double playerHeight = 50.0;
   static const double obstacleWidth = 30.0;
@@ -31,6 +39,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
 
   List<double> obstacleX = [400.0, 700.0];
   int score = 0;
+  late int _highScore;
   bool isGameOver = false;
   Timer? gameLoopTimer;
   double gameAreaHeight = 0;
@@ -44,20 +53,23 @@ class _RunGameScreenState extends State<RunGameScreen> {
   @override
   void initState() {
     super.initState();
+    _highScore = widget.highScore;
     startGame();
   }
 
   void startGame() {
-    playerY = 0;
-    playerVelocityY = 0;
-    obstacleX = [400.0, 700.0];
-    score = 0;
-    isGameOver = false;
-    gameLoopTimer?.cancel();
-    gameLoopTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (!isGameOver) {
-        updateGame(16 / 1000.0);
-      }
+    setState(() {
+      playerY = 0;
+      playerVelocityY = 0;
+      obstacleX = [400.0, 700.0];
+      score = 0;
+      isGameOver = false;
+      gameLoopTimer?.cancel();
+      gameLoopTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+        if (!isGameOver) {
+          updateGame(16 / 1000.0);
+        }
+      });
     });
   }
 
@@ -75,14 +87,10 @@ class _RunGameScreenState extends State<RunGameScreen> {
       // Update obstacle positions
       for (int i = 0; i < obstacleX.length; i++) {
         obstacleX[i] -= gameSpeed * deltaTime;
-        if (obstacleX[i] < -obstacleWidth) {
-          obstacleX[i] = 800.0; // Reset obstacle position
-          score++;
-        }
       }
 
       // Check for collision (use a constrained game area so visuals sit near middle)
-  final double screenW = MediaQuery.of(context).size.width;
+      final double screenW = MediaQuery.of(context).size.width;
 
       final playerRect = Rect.fromLTWH(
         50,
@@ -102,11 +110,19 @@ class _RunGameScreenState extends State<RunGameScreen> {
         if (playerRect.overlaps(obstacleRect)) {
           isGameOver = true;
           gameLoopTimer?.cancel();
+          if (score > widget.highScore) {
+            _api.run(widget.pubkey, score).catchError((e) {
+              print("Failed to submit score automatically: $e");
+            });
+          }
         }
         if (x < -obstacleWidth) {
           // reset obstacle off the right edge
           obstacleX[i] = screenW + 100.0;
           score++;
+          if (score > _highScore) {
+            _highScore = score;
+          }
         }
       }
     });
@@ -117,6 +133,12 @@ class _RunGameScreenState extends State<RunGameScreen> {
       setState(() {
         playerVelocityY = jumpVelocity;
       });
+    }
+  }
+
+  void _exitGame() {
+    if (mounted) {
+      Navigator.of(context).pop(_highScore);
     }
   }
 
@@ -136,7 +158,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
       backgroundColor: colorScheme.background,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: isGameOver ? startGame : jump,
+        onTap: isGameOver ? null : jump, // Disable jump when game is over
         child: Align(
           alignment: Alignment.topCenter,
           child: Padding(
@@ -194,6 +216,19 @@ class _RunGameScreenState extends State<RunGameScreen> {
                         ),
                       ),
                     ),
+                    // High Score
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Text(
+                        'HI: $_highScore',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onBackground,
+                        ),
+                      ),
+                    ),
                     // Game Over Message
                     if (isGameOver)
                       Center(
@@ -229,8 +264,18 @@ class _RunGameScreenState extends State<RunGameScreen> {
                               NesButton(
                                 type: NesButtonType.normal,
                                 onPressed: () {
-                                  Navigator.of(context).pop();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => LeaderboardScreen(pubkey: widget.pubkey),
+                                    ),
+                                  );
                                 },
+                                child: const Text('Leaderboard'),
+                              ),
+                              const SizedBox(height: 10),
+                              NesButton(
+                                type: NesButtonType.normal,
+                                onPressed: _exitGame,
                                 child: const Text('Back to Solmate'),
                               ),
                             ],

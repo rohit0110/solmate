@@ -4,6 +4,7 @@ import { Database } from 'sqlite';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { addXp, getXpForLevel, XP_FOR_FEED, XP_FOR_PET, XP_PER_RUN_SCORE } from '../services/leveling_service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,9 @@ interface SolmateData {
   pubkey: string;
   name: string;
   animal: string;
+  level: number;
+  xp: number;
+  run_highscore: number;
   last_fed_at: string;
   last_pet_at: string;
   created_at: string;
@@ -31,10 +35,15 @@ function calculateStats(solmate: SolmateData) {
   const hoursSincePet = (now.getTime() - lastPet.getTime()) / (1000 * 60 * 60);
   const happiness = Math.max(0, Math.min(100, 100 - hoursSincePet * 2));
 
+  const xpForNextLevel = getXpForLevel(solmate.level + 1);
+
   return {
     ...solmate,
     health: Math.round(health),
     happiness: Math.round(happiness),
+    xp: solmate.xp,
+    level: solmate.level,
+    xp_for_next_level: xpForNextLevel,
   };
 }
 
@@ -109,8 +118,8 @@ router.post('/', async (req, res) => {
     const now = new Date().toISOString();
     const defaultBackground = '/assets/background/background_day.png';
     await req.db.run(
-      'INSERT INTO solmates (pubkey, name, level, animal, last_fed_at, last_pet_at, created_at, updated_at, selected_background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [pubkey, name, 1, animal, now, now, now, now, defaultBackground]
+      'INSERT INTO solmates (pubkey, name, level, xp, run_highscore, animal, last_fed_at, last_pet_at, created_at, updated_at, selected_background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [pubkey, name, 1, 0, 0, animal, now, now, now, now, defaultBackground]
     );
 
     const newSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
@@ -132,7 +141,7 @@ router.post('/feed', async (req, res) => {
   }
 
   try {
-    const solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    let solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
     if (!solmate) {
       return res.status(404).json({ error: 'Solmate not found' });
     }
@@ -146,14 +155,13 @@ router.post('/feed', async (req, res) => {
     const newLastFedDate = new Date(now.getTime() - newHoursSinceFed * 60 * 60 * 1000);
     const newLastFedAt = newLastFedDate.toISOString();
 
-    const result = await req.db.run(
+    await req.db.run(
       'UPDATE solmates SET last_fed_at = ?, updated_at = ? WHERE pubkey = ?',
       [newLastFedAt, now.toISOString(), pubkey]
     );
 
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Solmate not found during update' });
-    }
+    // Add XP for feeding
+    await addXp(req.db, pubkey, XP_FOR_FEED);
 
     const updatedSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
     if (!updatedSolmate) {
@@ -188,14 +196,13 @@ router.post('/pet', async (req, res) => {
     const newLastPetDate = new Date(now.getTime() - newHoursSincePet * 60 * 60 * 1000);
     const newLastPetAt = newLastPetDate.toISOString();
 
-    const result = await req.db.run(
+    await req.db.run(
       'UPDATE solmates SET last_pet_at = ?, updated_at = ? WHERE pubkey = ?',
       [newLastPetAt, now.toISOString(), pubkey]
     );
 
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Solmate not found during update' });
-    }
+    // Add XP for petting
+    await addXp(req.db, pubkey, XP_FOR_PET);
 
     const updatedSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
     if (!updatedSolmate) {
@@ -206,6 +213,45 @@ router.post('/pet', async (req, res) => {
     console.error('Error petting solmate:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// POST /api/solmate/run
+router.post('/run', async (req, res) => {
+    const { pubkey, score } = req.body;
+    if (!pubkey || score === undefined) {
+        return res.status(400).json({ error: 'pubkey and score are required' });
+    }
+
+    if (typeof score !== 'number' || score < 0) {
+        return res.status(400).json({ error: 'score must be a non-negative number' });
+    }
+
+    try {
+        const solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+        if (!solmate) {
+            return res.status(404).json({ error: 'Solmate not found' });
+        }
+
+        const xpGained = Math.floor(score * XP_PER_RUN_SCORE);
+        if (xpGained > 0) {
+            await addXp(req.db, pubkey, xpGained);
+        }
+
+        // New logic for high score
+        if (score > solmate.run_highscore) {
+            await req.db.run('UPDATE solmates SET run_highscore = ? WHERE pubkey = ?', [score, pubkey]);
+        }
+
+        const updatedSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+        if (!updatedSolmate) {
+            return res.status(404).json({ error: 'Solmate not found after update' });
+        }
+        res.json(calculateStats(updatedSolmate));
+
+    } catch (error) {
+        console.error('Error during /run:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 router.post('/decorations', async (req, res) => {

@@ -34,6 +34,9 @@ class _SolmateScreenState extends State<SolmateScreen> {
   int _health = 100;
   int _happiness = 100;
   int _level = 1;
+  int _xp = 0;
+  int _xpForNextLevel = 100;
+  int _runHighscore = 0;
   bool _isHappy = false;
   String _message = "Welcome to your Solmate!";
   bool _isLoading = true;
@@ -83,24 +86,8 @@ class _SolmateScreenState extends State<SolmateScreen> {
         });
         return;
       }
-
-      final decorationsData = (data['decorations'] as List<dynamic>?) ?? [];
-      final newDecorations = decorationsData
-          .map((item) => DecorationAsset.fromJson(item as Map<String, dynamic>))
-          .toList();
-
+      _updateStateWithData(data);
       setState(() {
-        _health = data['health'];
-        _happiness = data['happiness'];
-        _level = data['level'] ?? 1;
-        _solmateNameDisplay = data['name'] ?? widget.solmateName;
-        _selectedDecorations = newDecorations; // Update the flat list
-        _selectedBackgroundUrl = data['selected_background'];
-        if (_health <= 0) {
-          _message = "Solmate has perished! RIP $_solmateNameDisplay";
-        } else {
-          _message = "Your Solmate is ready!";
-        }
         _isLoading = false;
       });
     } catch (e) {
@@ -109,6 +96,34 @@ class _SolmateScreenState extends State<SolmateScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _updateStateWithData(Map<String, dynamic> data) {
+    final int oldLevel = _level;
+
+    setState(() {
+      _health = data['health'] ?? _health;
+      _happiness = data['happiness'] ?? _happiness;
+      _level = data['level'] ?? _level;
+      _xp = data['xp'] ?? _xp;
+      _xpForNextLevel = data['xp_for_next_level'] ?? _xpForNextLevel;
+      _runHighscore = data['run_highscore'] ?? _runHighscore;
+      _solmateNameDisplay = data['name'] ?? _solmateNameDisplay;
+      
+      final decorationsData = (data['decorations'] as List<dynamic>?) ?? [];
+      _selectedDecorations = decorationsData
+          .map((item) => DecorationAsset.fromJson(item as Map<String, dynamic>))
+          .toList();
+      _selectedBackgroundUrl = data['selected_background'];
+
+      if (_health <= 0) {
+        _message = "Solmate has perished! RIP $_solmateNameDisplay";
+      } else if (_level > oldLevel) {
+        _message = "Level up! You are now level $_level!";
+      } else {
+        _message = "Your Solmate is ready!";
+      }
+    });
     _saveSolmateData();
   }
 
@@ -138,17 +153,18 @@ class _SolmateScreenState extends State<SolmateScreen> {
     });
     try {
       final data = await _api.feedSolmate(widget.publicKey);
+      _updateStateWithData(data);
       setState(() {
-        _health = data['health'];
-        _happiness = data['happiness'];
-        _message = "You fed your Solmate!";
+        // Check for level up message override
+        if (!_message.contains("Level up!")) {
+          _message = "You fed your Solmate!";
+        }
       });
     } catch (e) {
       setState(() {
         _message = "Failed to feed: $e";
       });
     }
-    _saveSolmateData();
   }
 
   void _petSolmate() async {
@@ -163,16 +179,18 @@ class _SolmateScreenState extends State<SolmateScreen> {
     });
     try {
       final data = await _api.petSolmate(widget.publicKey);
-      setState(() {
-        _happiness = data['happiness'];
-        _message = "You pet your Solmate!";
+      _updateStateWithData(data);
+       setState(() {
+        // Check for level up message override
+        if (!_message.contains("Level up!")) {
+          _message = "You pet your Solmate!";
+        }
       });
     } catch (e) {
       setState(() {
         _message = "Failed to pet: $e";
       });
     }
-    _saveSolmateData();
   }
 
   void _emoteSolmate() {
@@ -431,6 +449,8 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                     MaterialPageRoute(
                                       builder: (context) => RunGameScreen(
                                         solmateImageBytes: _normalSpriteBytes!,
+                                        pubkey: widget.publicKey,
+                                        highScore: _runHighscore,
                                       ),
                                     ),
                                   );
