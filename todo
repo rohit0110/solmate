@@ -22,7 +22,7 @@ TODO:
 [] LOW: fix solmate_screen widget heart and happiness to be pixelated
 [] MEDIUM: share button to generate a card you can post on twitter etc
 [] LOW: cant spam feeds for health
-[] HIGH: add paywall of decoration items
+[] LOW: add paywall of decoration items [added in pay branch]
 [] LOW: level doesnt get updated if already in solmate_screen
 [] HIGH: level up logic CRON in backend needs to get added
 [] HIGH: Mint NFT in metaplex
