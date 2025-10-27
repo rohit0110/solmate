@@ -1,9 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math';
+import 'package:bs58/bs58.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:nes_ui/nes_ui.dart';
+import 'package:solana/encoder.dart';
+import 'package:solana/solana.dart';
+import 'package:solana_mobile_client/solana_mobile_client.dart';
 import 'package:solmate_frontend/api/solmate_api.dart';
 import 'package:solmate_frontend/models/decoration_asset.dart';
 import 'package:solmate_frontend/screens/run_game_screen.dart';
@@ -32,6 +37,7 @@ class SolmateScreen extends StatefulWidget {
 
 class _SolmateScreenState extends State<SolmateScreen> {
   final SolmateBackendApi _api = SolmateBackendApi();
+  late final SolanaClient _solanaClient;
   late String _solmateNameDisplay;
   int _health = 100;
   int _happiness = 100;
@@ -68,6 +74,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   void initState() {
     super.initState();
     _solmateNameDisplay = widget.solmateName;
+    _solanaClient = SolanaClient(rpcUrl: Uri.parse('https://api.devnet.solana.com'), websocketUrl: Uri.parse('wss://api.devnet.solana.com'));
 
     if (widget.solmateSprites != null) {
       _normalSpriteBytes = base64Decode(widget.solmateSprites!['normal']!);
@@ -153,7 +160,46 @@ class _SolmateScreenState extends State<SolmateScreen> {
     setState(() {
       _message = "Feeding your Solmate...";
     });
+
+    LocalAssociationScenario? session;
     try {
+      session = await LocalAssociationScenario.create();
+      session.startActivityForResult(null).ignore();
+      final client = await session.start();
+
+      await client.reauthorize(
+        identityUri: Uri.parse(dotenv.env['APP_IDENTITY_URI']!),
+        identityName: dotenv.env['APP_IDENTITY_NAME']!,
+        authToken: widget.authToken,
+      );
+
+      final sender = Ed25519HDPublicKey.fromBase58(widget.publicKey);
+
+      final instruction = MemoInstruction(
+        memo: "Solmate: feed ${widget.solmateName}",
+        signers: [Ed25519HDPublicKey.fromBase58(widget.publicKey)]
+      );
+
+      final message = Message.only(instruction);
+      final latestBlockhash = await _solanaClient.rpcClient.getLatestBlockhash();
+
+      final compiled = message.compileV0(
+        recentBlockhash: latestBlockhash.value.blockhash,
+        feePayer: sender,
+      );
+
+      final transaction = SignedTx(
+        compiledMessage: compiled,
+        signatures: [Signature(Uint8List(64), publicKey: sender)],
+      );
+
+      final unsignedTxBytes = base64Decode(transaction.encode());
+
+      final result = await client.signAndSendTransactions(transactions: [unsignedTxBytes]);
+      final signatureBytes = result.signatures.first;
+      final signature = base58.encode(signatureBytes);
+      debugPrint('Feed transaction signature: $signature');
+
       final data = await _api.feedSolmate(widget.publicKey);
       _updateStateWithData(data);
       setState(() {
@@ -166,6 +212,10 @@ class _SolmateScreenState extends State<SolmateScreen> {
       setState(() {
         _message = "Failed to feed: $e";
       });
+    } finally {
+      if (session != null) {
+        await session.close();
+      }
     }
   }
 
