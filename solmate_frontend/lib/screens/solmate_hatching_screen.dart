@@ -10,11 +10,13 @@ import 'package:solmate_frontend/screens/solmate_screen.dart';
 class SolmateHatchingScreen extends StatefulWidget {
   final SolmateAnimal solmateAnimal;
   final String publicKey;
+  final String authToken;
 
   const SolmateHatchingScreen({
     super.key,
     required this.solmateAnimal,
     required this.publicKey,
+    required this.authToken,
   });
 
   @override
@@ -76,6 +78,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
               publicKey: widget.publicKey,
               solmateName: _nameController.text.trim(),
               solmateSprites: _spriteData,
+              authToken: widget.authToken,
             ),
           ));
         }

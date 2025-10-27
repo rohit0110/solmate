@@ -14,6 +14,7 @@ class SolmateSelectionScreen extends StatefulWidget {
 class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
   List<SolmateAnimal> _availableChoices = [];
   String? _selectedPublicKey;
+  String? _authToken;
 
   @override
   void initState() {
@@ -24,9 +25,10 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final pubkey = ModalRoute.of(context)?.settings.arguments as String?;
-    if (pubkey != null) {
-      _selectedPublicKey = pubkey;
+    final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+    if (arguments != null) {
+      _selectedPublicKey = arguments['publicKey'];
+      _authToken = arguments['authToken'];
     }
     // If pubkey is null, it will be handled in _onSolmateSelected
   }
@@ -39,9 +41,9 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
   }
 
   Future<void> _onSolmateSelected(SolmateAnimal selectedSolmate) async {
-    if (_selectedPublicKey == null) {
+    if (_selectedPublicKey == null || _authToken == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: Public key not selected.',
+        SnackBar(content: Text('Error: Public key or auth token not available.',
           style: TextStyle(color: Theme.of(context).colorScheme.onError))),
       );
       return;
@@ -59,6 +61,7 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
         builder: (context) => SolmateHatchingScreen(
           solmateAnimal: selectedSolmate,
           publicKey: _selectedPublicKey!,
+          authToken: _authToken!,
         ),
       ),
     );

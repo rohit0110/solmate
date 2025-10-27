@@ -18,7 +18,7 @@ class LeaderboardEntry {
       rank: json['rank'],
       pubkey: json['pubkey'],
       name: json['name'],
-      score: json['run_highscore'],
+      score: json['score'],
       sprite: json['sprite'],
     );
   }

@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       final pubkeyString = base58.encode(result!.publicKey);
+      final authToken = result.authToken;
       final solmateData = await _api.getSolmateData(pubkeyString);
 
       if (solmateData != null) {
@@ -47,11 +48,15 @@ class _HomeScreenState extends State<HomeScreen> {
               publicKey: pubkeyString,
               solmateName: solmateData['name'],
               solmateSprites: spriteData,
+              authToken: authToken,
             ),
           ),
         );
       } else {
-        Navigator.pushNamed(context, '/solmateSelection', arguments: pubkeyString);
+        Navigator.pushNamed(context, '/solmateSelection', arguments: {
+          'publicKey': pubkeyString,
+          'authToken': authToken,
+        });
       }
     } catch (e) {
       print(e);
