@@ -49,6 +49,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
   bool _isHappy = false;
   String _message = "Welcome to your Solmate!";
   bool _isLoading = true;
+  bool _hasPoo = false;
 
   // For unique sprites
   Uint8List? _normalSpriteBytes;
@@ -119,6 +120,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
       _xpForNextLevel = data['xp_for_next_level'] ?? _xpForNextLevel;
       _runHighscore = data['run_highscore'] ?? _runHighscore;
       _solmateNameDisplay = data['name'] ?? _solmateNameDisplay;
+      _hasPoo = data['has_poo'] == 1 || data['has_poo'] == true;
       
       final decorationsData = (data['decorations'] as List<dynamic>?) ?? [];
       _selectedDecorations = decorationsData
@@ -266,6 +268,29 @@ class _SolmateScreenState extends State<SolmateScreen> {
     _saveSolmateData();
   }
 
+  void _cleanPoo() async {
+    if (_health <= 0) {
+      setState(() {
+        _message = _getRandomDeadMessage();
+      });
+      return;
+    }
+    setState(() {
+      _message = "Cleaning up...";
+    });
+    try {
+      final data = await _api.cleanPoo(widget.publicKey);
+      _updateStateWithData(data);
+      setState(() {
+        _message = "All clean!";
+      });
+    } catch (e) {
+      setState(() {
+        _message = "Failed to clean: $e";
+      });
+    }
+  }
+
   Widget _buildSolmateImage(double size, {bool isHappy = false}) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -391,9 +416,30 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                   width: cellSize,
                                   height: cellSize,
                                   child: Center(
-                                    child: _buildSolmateImage(cellSize * 0.9, isHappy: _isHappy),
+                                    child: _buildSolmateImage(
+                                      widget.animalName == 'toly' ? cellSize * 1.5 : cellSize * 0.9,
+                                      isHappy: _isHappy
+                                    ),
                                   ),
                                 ),
+
+                                // Poo layer
+                                if (_hasPoo)
+                                  Positioned(
+                                    top: 2 * cellSize, // same row as solmate
+                                    left: 1 * cellSize, // cell to the left
+                                    width: cellSize,
+                                    height: cellSize,
+                                    child: Center(
+                                      child: Image.asset(
+                                        'assets/sprites/poo.png',
+                                        width: cellSize,
+                                        height: cellSize,
+                                        fit: BoxFit.contain,
+                                        filterQuality: FilterQuality.none,
+                                      ),
+                                    ),
+                                  ),
                               ],
                             );
                           },
@@ -448,7 +494,11 @@ class _SolmateScreenState extends State<SolmateScreen> {
                           children: [
                             _HardwareButton(icon: Icons.restaurant, label: 'Feed', onPressed: _feedSolmate),
                             _HardwareButton(icon: Icons.pets, label: 'Pet', onPressed: _petSolmate),
-                            _HardwareButton(icon: Icons.tag_faces, label: 'Emote', onPressed: _emoteSolmate),
+                            _HardwareButton(
+                              icon: _hasPoo ? Icons.cleaning_services : Icons.tag_faces,
+                              label: _hasPoo ? 'Clean' : 'Emote',
+                              onPressed: _hasPoo ? _cleanPoo : _emoteSolmate,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -505,6 +555,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                         solmateImageBytes: _normalSpriteBytes!,
                                         pubkey: widget.publicKey,
                                         highScore: _runHighscore,
+                                        animalName: widget.animalName,
                                       ),
                                     ),
                                   );

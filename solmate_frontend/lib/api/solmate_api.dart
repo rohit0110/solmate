@@ -110,4 +110,17 @@ class SolmateBackendApi {
       throw Exception('Failed to save background: ${response.body}');
     }
   }
+
+  Future<Map<String, dynamic>> cleanPoo(String pubkey) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/solmate/clean'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'pubkey': pubkey}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to clean poo: ${response.body}');
+    }
+  }
 }

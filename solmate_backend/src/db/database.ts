@@ -29,6 +29,7 @@ export async function openDb(): Promise<Database> {
         run_highscore INTEGER NOT NULL DEFAULT 0,
         animal VARCHAR(50) NOT NULL,
         selected_background VARCHAR(255),
+        has_poo BOOLEAN NOT NULL DEFAULT 0,
         last_fed_at TIMESTAMP WITH TIME ZONE NOT NULL,
         last_pet_at TIMESTAMP WITH TIME ZONE NOT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

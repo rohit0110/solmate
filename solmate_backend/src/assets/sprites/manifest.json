@@ -22,5 +22,17 @@
     "WINGS": "#9eff45",
     "EARS": "#ff4545",
     "EYE": "#1a07f1"
+  },
+  "TOLY": {
+    "CAP_MAIN": "#21147d",
+    "CAP_UNDER": "#eb2fc0",
+    "JACKET": "#2a702b",
+    "COLLAR": "#dc7b35",
+    "HOODIE_INSIDE": "#572073",
+    "HOODIE_OUTSIDE": "#0496ed",
+    "STRIPE": "#e0212e",
+    "PANTS": "#04ed96",
+    "SHOES": "#373570",
+    "TSHIRT": "#2a706b"
   }
 }
