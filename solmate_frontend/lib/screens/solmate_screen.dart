@@ -143,6 +143,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
     await HomeWidget.saveWidgetData<String>('solmateName', _solmateNameDisplay);
     await HomeWidget.saveWidgetData<int>('solmateHealth', _health);
     await HomeWidget.saveWidgetData<int>('solmateHappiness', _happiness);
+    await HomeWidget.saveWidgetData<bool>('has_poo', _hasPoo);
     
     if (_normalSpriteBytes != null) {
       final bytes = _health <= 0 && _deadSpriteBytes != null
