@@ -24,6 +24,63 @@ interface SolmateData {
   updated_at: string;
 }
 
+async function getFullSolmateData(db: Database, pubkey: string): Promise<any | null> {
+    const solmate: SolmateData | undefined = await db.get<SolmateData>(
+      'SELECT * FROM solmates WHERE pubkey = ?',
+      [pubkey]
+    );
+
+    if (!solmate) {
+      return null;
+    }
+
+    const decorationsFromDb = await db.all(
+      'SELECT row, col, decoration_name as name, decoration_url as url FROM selected_decorations WHERE solmate_pubkey = ?',
+      [pubkey]
+    );
+
+    const userLevel = solmate.level;
+    const purchased = await db.all('SELECT asset_id FROM unlocked_assets WHERE user_pubkey = ?', pubkey);
+    const unlockedAssets = new Set(purchased.map((p: any) => p.asset_id));
+
+    const manifestPath = path.join(__dirname, '..', 'assets', 'decorations', 'manifest.json');
+    const manifestContent = await fs.readFile(manifestPath, 'utf-8');
+    const manifest = JSON.parse(manifestContent);
+
+    const decorations = decorationsFromDb.map((deco: any) => {
+      const manifestItem = manifest.find((item: any) => `/assets/decorations/${item.filename}` === deco.url);
+
+      let isUnlocked = false;
+      let unlock = null;
+
+      if (manifestItem) {
+        unlock = manifestItem.unlock;
+        const assetId = `decoration_${manifestItem.name}`;
+        if (!manifestItem.unlock) {
+          isUnlocked = true;
+        } else if (manifestItem.unlock.type === 'level' && userLevel >= manifestItem.unlock.level) {
+          isUnlocked = true;
+        } else if (unlockedAssets.has(assetId)) {
+          isUnlocked = true;
+        }
+      } else {
+        isUnlocked = true;
+      }
+
+      return {
+        ...deco,
+        unlock: unlock,
+        isUnlocked: isUnlocked,
+      };
+    });
+
+    return {
+      ...solmate,
+      decorations: decorations,
+    };
+}
+
+
 function calculateStats(solmate: SolmateData) {
   const now = new Date();
   const lastFed = new Date(solmate.last_fed_at);
@@ -75,25 +132,12 @@ router.get('/', async (req, res) => {
   }
 
   try {
-    const solmate: SolmateData | undefined = await req.db.get<SolmateData>(
-      'SELECT * FROM solmates WHERE pubkey = ?',
-      [pubkey]
-    );
+    const solmateWithDecorations = await getFullSolmateData(req.db, pubkey);
 
-    if (!solmate) {
+    if (!solmateWithDecorations) {
       // Return null if not found, so frontend can distinguish between not found and error
       return res.json(null);
     }
-
-    const decorations = await req.db.all(
-      'SELECT row, col, decoration_name as name, decoration_url as url FROM selected_decorations WHERE solmate_pubkey = ?',
-      [pubkey]
-    );
-
-    const solmateWithDecorations = {
-      ...solmate,
-      decorations: decorations,
-    };
 
     res.json(calculateStats(solmateWithDecorations as SolmateData));
   } catch (error) {
@@ -122,11 +166,11 @@ router.post('/', async (req, res) => {
       [pubkey, name, 1, 0, 0, animal, now, now, now, now, defaultBackground]
     );
 
-    const newSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    const newSolmate = await getFullSolmateData(req.db, pubkey);
     if (!newSolmate) {
       return res.status(500).json({ error: 'Failed to retrieve new solmate after creation' });
     }
-    res.status(201).json(calculateStats(newSolmate));
+    res.status(201).json(calculateStats(newSolmate as SolmateData));
   } catch (error) {
     console.error('Error creating solmate:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -163,11 +207,11 @@ router.post('/feed', async (req, res) => {
     // Add XP for feeding
     await addXp(req.db, pubkey, XP_FOR_FEED);
 
-    const updatedSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    const updatedSolmate = await getFullSolmateData(req.db, pubkey);
     if (!updatedSolmate) {
         return res.status(404).json({ error: 'Solmate not found after update' });
     }
-    res.json(calculateStats(updatedSolmate));
+    res.json(calculateStats(updatedSolmate as SolmateData));
   } catch (error) {
     console.error('Error feeding solmate:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -204,11 +248,11 @@ router.post('/pet', async (req, res) => {
     // Add XP for petting
     await addXp(req.db, pubkey, XP_FOR_PET);
 
-    const updatedSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    const updatedSolmate = await getFullSolmateData(req.db, pubkey);
     if (!updatedSolmate) {
         return res.status(404).json({ error: 'Solmate not found after update' });
     }
-    res.json(calculateStats(updatedSolmate));
+    res.json(calculateStats(updatedSolmate as SolmateData));
   } catch (error) {
     console.error('Error petting solmate:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -242,11 +286,11 @@ router.post('/run', async (req, res) => {
             await req.db.run('UPDATE solmates SET run_highscore = ? WHERE pubkey = ?', [score, pubkey]);
         }
 
-        const updatedSolmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+        const updatedSolmate = await getFullSolmateData(req.db, pubkey);
         if (!updatedSolmate) {
             return res.status(404).json({ error: 'Solmate not found after update' });
         }
-        res.json(calculateStats(updatedSolmate));
+        res.json(calculateStats(updatedSolmate as SolmateData));
 
     } catch (error) {
         console.error('Error during /run:', error);
