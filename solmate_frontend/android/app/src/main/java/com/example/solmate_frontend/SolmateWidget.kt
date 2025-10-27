@@ -1,10 +1,13 @@
 package com.example.solmate_frontend
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.BitmapFactory
+import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.net.URL
@@ -44,9 +47,19 @@ internal fun updateAppWidget(
 ) {
     val solmateName = widgetData.getString("solmateName", "Solmate") ?: "Solmate"
     val solmateImageBytes = widgetData.getString("solmateImageBytes", null)
+    val hasPoo = widgetData.getBoolean("has_poo", false)
 
     // Construct the RemoteViews object
     val views = RemoteViews(context.packageName, R.layout.solmate_widget)
+
+    // Create an Intent to launch MainActivity
+    val pendingIntent = PendingIntent.getActivity(
+        context,
+        0,
+        Intent(context, MainActivity::class.java),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+    views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
     views.setTextViewText(R.id.solmate_name, solmateName.replaceFirstChar { it.uppercase() })
 
@@ -58,6 +71,9 @@ internal fun updateAppWidget(
     } else {
         views.setImageViewResource(R.id.solmate_image, R.mipmap.ic_launcher)
     }
+
+    // Set poo visibility
+    views.setViewVisibility(R.id.widget_poo, if (hasPoo) View.VISIBLE else View.GONE)
 
     // Instruct the widget manager to update the widget
     appWidgetManager.updateAppWidget(appWidgetId, views)

@@ -1,5 +1,6 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
@@ -14,6 +15,15 @@
         android:padding="16dp"
         android:scaleType="fitCenter"
         android:contentDescription="@string/solmate_image_description" />
+
+    <ImageView
+        android:id="@+id/widget_poo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="36dp"
+        android:src="@drawable/poo" />
 
     <TextView
         android:id="@+id/solmate_name"

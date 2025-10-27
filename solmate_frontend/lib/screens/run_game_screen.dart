@@ -11,12 +11,14 @@ class RunGameScreen extends StatefulWidget {
   final Uint8List solmateImageBytes;
   final String pubkey;
   final int highScore;
+  final String animalName;
 
   const RunGameScreen({
     super.key,
     required this.solmateImageBytes,
     required this.pubkey,
     required this.highScore,
+    required this.animalName,
   });
 
   @override
@@ -25,8 +27,8 @@ class RunGameScreen extends StatefulWidget {
 
 class _RunGameScreenState extends State<RunGameScreen> {
   final SolmateBackendApi _api = SolmateBackendApi();
-  static const double playerWidth = 50.0;
-  static const double playerHeight = 50.0;
+  late double playerWidth;
+  late double playerHeight;
   static const double obstacleWidth = 30.0;
   static const double obstacleHeight = 60.0;
   static const double groundHeight = 0.0;
@@ -54,6 +56,15 @@ class _RunGameScreenState extends State<RunGameScreen> {
   void initState() {
     super.initState();
     _highScore = widget.highScore;
+
+    if (widget.animalName == 'toly') {
+      playerWidth = 60.0;
+      playerHeight = 60.0;
+    } else {
+      playerWidth = 50.0;
+      playerHeight = 50.0;
+    }
+
     startGame();
   }
 

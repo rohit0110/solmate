@@ -13,21 +13,24 @@ DONE:
 [x] HIGH: Web3 logic for log in and use that public key
 [x] MEDIUM: Add logic to change background, level up asset essentially
 [x] MEDIUM: add leaderboard with top scores in run_game_screen
+[x] LOW: cant spam feeds for health [via memo Tx]
+[x] LOW: add paywall of decoration items
+[x] HIGH: level up logic CRON in backend needs to get added [Undecided_on_tx_history_feature]
+[x] LOW: Utilize auth token from MWA so repeated requests arent made
+[x] HIGH: Special solmate logic for tuli [Decided to keep as separate sprite, no unique logic]
 
 TODO:
 [] LOW: run_game_screen needs more robust logic for obstacles
 [] LOW: run_game_screen needs background ui in game screen
 [] LOW: run_game_screen needs something at bottom of screen which is empty
-[] MEDIUM: add small buttons in widget to eat and shit
 [] LOW: fix solmate_screen widget heart and happiness to be pixelated
 [] MEDIUM: share button to generate a card you can post on twitter etc
-[] LOW: cant spam feeds for health
-[] LOW: add paywall of decoration items [added in pay branch]
 [] LOW: level doesnt get updated if already in solmate_screen
-[] HIGH: level up logic CRON in backend needs to get added
-[] HIGH: Mint NFT in metaplex
-[] HIGH: Special solmate logic for tuli
-[] LOW: Utilize auth token from MWA so repeated requests arent made
+[] HIGH: Mint NFT in metaplex [partial signing from mint account not working, needs a fix]
 [] LOW: Add ratelimiting
 [] MEDIUM: Text on the Solmate_screen feels very fidgety and wonky whenever interactions take place
 [] LOW: Transition from marketplace to solmate screen feels wonky because of loading screen flashing for brief second
+[] MEDIUM: Error Handling and edgecase handling (eg: not selecting a wallet)
+
+NOT DOING
+[] MEDIUM: add small buttons in widget to eat and shit

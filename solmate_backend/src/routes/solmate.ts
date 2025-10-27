@@ -259,6 +259,35 @@ router.post('/pet', async (req, res) => {
   }
 });
 
+// POST /api/solmate/clean
+router.post('/clean', async (req, res) => {
+  const { pubkey } = req.body;
+  if (!pubkey) {
+    return res.status(400).json({ error: 'pubkey is required' });
+  }
+
+  try {
+    const solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    if (!solmate) {
+      return res.status(404).json({ error: 'Solmate not found' });
+    }
+
+    await req.db.run('UPDATE solmates SET has_poo = 0, updated_at = ? WHERE pubkey = ?', [new Date().toISOString(), pubkey]);
+
+    // Add a small amount of XP for cleaning
+    await addXp(req.db, pubkey, 5);
+
+    const updatedSolmate = await getFullSolmateData(req.db, pubkey);
+    if (!updatedSolmate) {
+        return res.status(404).json({ error: 'Solmate not found after update' });
+    }
+    res.json(calculateStats(updatedSolmate as SolmateData));
+  } catch (error) {
+    console.error('Error cleaning solmate poo:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/solmate/run
 router.post('/run', async (req, res) => {
     const { pubkey, score } = req.body;

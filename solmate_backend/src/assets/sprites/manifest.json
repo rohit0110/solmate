@@ -11,16 +11,28 @@
     "EARS": "#ff4545",
     "EYE": "#1a07f1"
   },
-  "FROG": {
-    "BODY": "#FFFFFF",
-    "BODYSHADOW": "#979797",
-    "STRIPE1": "#00f839",
-    "STRIPE2": "#21efd8",
-    "STRIPE3": "#eaf307",
-    "UNDERBELLY": "#ff45e5",
-    "TOES": "#1e7ac4",
-    "WINGS": "#9eff45",
-    "EARS": "#ff4545",
-    "EYE": "#1a07f1"
+  "NESSIE": {
+    "BODY": "#228be6",
+    "STRIPE1": "#e67422",
+    "STRIPE2": "#c42d2d",
+    "SPIKE1": "#c42d9b",
+    "SPIKE2": "#2dc492",
+    "SPIKE3": "#c4b52d",
+    "SPIKE4": "#b82dc4",
+    "JAW": "#d6e622",
+    "FLIPPER": "#6ee622",
+    "UNDERBELLY": "#84898e"
+  },
+  "TOLY": {
+    "CAP_MAIN": "#21147d",
+    "CAP_UNDER": "#eb2fc0",
+    "JACKET": "#2a702b",
+    "COLLAR": "#dc7b35",
+    "HOODIE_INSIDE": "#572073",
+    "HOODIE_OUTSIDE": "#0496ed",
+    "STRIPE": "#e0212e",
+    "PANTS": "#04ed96",
+    "SHOES": "#373570",
+    "TSHIRT": "#2a706b"
   }
 }
