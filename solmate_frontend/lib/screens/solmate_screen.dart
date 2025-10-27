@@ -14,6 +14,7 @@ import 'package:solmate_frontend/models/decoration_asset.dart';
 import 'package:solmate_frontend/screens/run_game_screen.dart';
 import 'package:solmate_frontend/screens/marketplace_screen.dart';
 import 'package:solmate_frontend/screens/home_screen.dart';
+import 'package:solmate_frontend/screens/survival_leaderboard_screen.dart';
 
 class SolmateScreen extends StatefulWidget {
   final String animalName;
@@ -509,6 +510,20 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                   );
                                   _loadInitialData();
                                 }
+                              },
+                            ),
+                            _HardwareButton(
+                              icon: Icons.leaderboard,
+                              label: 'Rank',
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SurvivalLeaderboardScreen(
+                                      pubkey: widget.publicKey,
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                           ],
