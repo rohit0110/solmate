@@ -104,7 +104,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
       });
     } catch (e) {
       setState(() {
-        _message = "Error loading data: $e";
+        _message = "Error loading data. Please try again.";
         _isLoading = false;
       });
     }
@@ -215,7 +215,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
       });
     } catch (e) {
       setState(() {
-        _message = "Failed to feed: $e";
+        _message = "Failed to feed. Please try again.";
       });
     } finally {
       if (session != null) {
@@ -245,7 +245,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
       });
     } catch (e) {
       setState(() {
-        _message = "Failed to pet: $e";
+        _message = "Failed to pet. Please try again.";
       });
     }
   }
@@ -288,7 +288,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
       });
     } catch (e) {
       setState(() {
-        _message = "Failed to clean: $e";
+        _message = "Failed to clean. Please try again.";
       });
     }
   }

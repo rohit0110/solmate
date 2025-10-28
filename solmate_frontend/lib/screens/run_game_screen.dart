@@ -124,6 +124,11 @@ class _RunGameScreenState extends State<RunGameScreen> {
           if (score > widget.highScore) {
             _api.run(widget.pubkey, score).catchError((e) {
               print("Failed to submit score automatically: $e");
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Failed to submit score.'), backgroundColor: Color(0xffe76e55),),
+                );
+              }
             });
           }
         }

@@ -34,5 +34,8 @@ TODO:
 [] MEDIUM: Error Handling and edgecase handling (eg: not selecting a wallet)
 [] MEDIUM: Share card for everything has small decorations, needs fix
 
+// AFTER HACKATHON
+[] MEDIUM: Replace Snackbars with NesSnackBars
+
 NOT DOING
 [] MEDIUM: add small buttons in widget to eat and shit

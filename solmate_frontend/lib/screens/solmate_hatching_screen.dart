@@ -51,7 +51,11 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
         setState(() {
           _isLoading = false;
         });
-        // Optionally show an error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to load sprite data.'), backgroundColor: Color(0xffe76e55),),
+          );
+        }
       }
     });
     // Trigger the hatching animation after a short delay
@@ -107,7 +111,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
         // Handle error
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to create Solmate: $e')),
+            const SnackBar(content: Text('Failed to create Solmate. Please try again.'), backgroundColor: Color(0xffe76e55),),
           );
           setState(() {
             _isMinting = false;
@@ -117,7 +121,7 @@ class _SolmateHatchingScreenState extends State<SolmateHatchingScreen> with Sing
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text("Please Give your Solmate a name!")),
+            content: Text("Please Give your Solmate a name!"), backgroundColor: Color(0xffe76e55),),
       );
     }
   }

@@ -62,7 +62,9 @@ class _HomeScreenState extends State<HomeScreen> {
       print(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error connecting to wallet: $e')),
+          const SnackBar(content: Text('Error connecting to wallet. Please try again.'), 
+          backgroundColor: Color(0xffe76e55),
+          ),
         );
       }
     } finally {

@@ -65,7 +65,11 @@ class _ShareScreenState extends State<ShareScreen> {
       setState(() {
         _isLoading = false;
       });
-      // Handle error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load Solmate data.'), backgroundColor: Color(0xffe76e55),),
+        );
+      }
     }
   }
 
