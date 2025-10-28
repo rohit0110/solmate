@@ -103,7 +103,7 @@ class _ShareScreenState extends State<ShareScreen> {
             },
             tabs: const [
               Tab(text: 'Sprite Only'),
-              Tab(text: 'With Background'),
+              Tab(text: 'Everything'),
             ],
           ),
         ),
@@ -181,6 +181,10 @@ class SolmateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final String solmateName = solmateData['name'] ?? 'Solmate';
     final int level = solmateData['level'] ?? 1;
+    final int foodFed = solmateData['food_fed'] ?? 0;
+    final int petsGiven = solmateData['pets_given'] ?? 0;
+    final int poosCleaned = solmateData['poos_cleaned'] ?? 0;
+    final int runHighscore = solmateData['run_highscore'] ?? 0;
     final String? backgroundUrl = showBackground ? solmateData['selected_background'] : null;
     final List<DecorationAsset> decorations = showDecorations
         ? (solmateData['decorations'] as List<dynamic>?)
@@ -268,6 +272,10 @@ class SolmateCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
+          Text("Run Highscore: $runHighscore", style: TextStyle(color: Colors.white)),
+          Text("Poos Cleaned: $poosCleaned", style: TextStyle(color: Colors.white)),
+          Text("Pets Given: $petsGiven", style: TextStyle(color: Colors.white)),
+          Text("Food fed: $foodFed", style: TextStyle(color: Colors.white))
         ],
       ),
     );
@@ -290,6 +298,10 @@ class SolmateSpriteOnlyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final String solmateName = solmateData['name'] ?? 'Solmate';
     final int level = solmateData['level'] ?? 1;
+    final int foodFed = solmateData['food_fed'] ?? 0;
+    final int petsGiven = solmateData['pets_given'] ?? 0;
+    final int poosCleaned = solmateData['poos_cleaned'] ?? 0;
+    final int runHighscore = solmateData['run_highscore'] ?? 0;
     final normalSpriteBytes = solmateSprites?['normal'] != null
         ? base64Decode(solmateSprites!['normal']!)
         : null;
@@ -308,8 +320,7 @@ class SolmateSpriteOnlyCard extends StatelessWidget {
           Text('Level: $level',
               style: const TextStyle(fontSize: 18, color: Colors.white70)),
           const SizedBox(height: 20),
-          Expanded( // Use Expanded to fill available space
-            child: LayoutBuilder(
+          LayoutBuilder(
               builder: (context, constraints) {
                 final double displaySize = min(constraints.maxWidth, constraints.maxHeight);
                 final double effectiveDisplaySize = max(250.0, displaySize); // Ensure a minimum of 250x250
@@ -335,8 +346,12 @@ class SolmateSpriteOnlyCard extends StatelessWidget {
                 );
               },
             ),
-          ),
           const SizedBox(height: 20),
+          Text("Run Highscore: $runHighscore", style: TextStyle(color: Colors.white),),
+          Text("Poos Cleaned: $poosCleaned", style: TextStyle(color: Colors.white)),
+          Text("Pets Given: $petsGiven", style: TextStyle(color: Colors.white)),
+          Text("Food fed: $foodFed", style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 20,)
         ],
       ),
     );

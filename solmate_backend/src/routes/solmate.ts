@@ -20,6 +20,9 @@ interface SolmateData {
   run_highscore: number;
   last_fed_at: string;
   last_pet_at: string;
+  poos_cleaned: number;
+  pets_given: number;
+  food_fed: number;
   created_at: string;
   updated_at: string;
 }
@@ -200,7 +203,7 @@ router.post('/feed', async (req, res) => {
     const newLastFedAt = newLastFedDate.toISOString();
 
     await req.db.run(
-      'UPDATE solmates SET last_fed_at = ?, updated_at = ? WHERE pubkey = ?',
+      'UPDATE solmates SET last_fed_at = ?, food_fed = food_fed + 1, updated_at = ? WHERE pubkey = ?',
       [newLastFedAt, now.toISOString(), pubkey]
     );
 
@@ -241,7 +244,7 @@ router.post('/pet', async (req, res) => {
     const newLastPetAt = newLastPetDate.toISOString();
 
     await req.db.run(
-      'UPDATE solmates SET last_pet_at = ?, updated_at = ? WHERE pubkey = ?',
+      'UPDATE solmates SET last_pet_at = ?, pets_given = pets_given + 1, updated_at = ? WHERE pubkey = ?',
       [newLastPetAt, now.toISOString(), pubkey]
     );
 
@@ -272,7 +275,7 @@ router.post('/clean', async (req, res) => {
       return res.status(404).json({ error: 'Solmate not found' });
     }
 
-    await req.db.run('UPDATE solmates SET has_poo = 0, updated_at = ? WHERE pubkey = ?', [new Date().toISOString(), pubkey]);
+    await req.db.run('UPDATE solmates SET has_poo = 0, poos_cleaned = poos_cleaned + 1, updated_at = ? WHERE pubkey = ?', [new Date().toISOString(), pubkey]);
 
     // Add a small amount of XP for cleaning
     await addXp(req.db, pubkey, 5);
