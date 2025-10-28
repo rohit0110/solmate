@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:solmate_frontend/models/decoration_asset.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SolmateBackendApi {
-  // For Android emulator, 10.0.2.2 points to the host machine's localhost
-  final String baseUrl = 'http://10.0.2.2:3000';
+  static final String _baseUrl = dotenv.env['BACKEND_URL']!;
 
   Future<Map<String, dynamic>?> getSolmateData(String pubkey) async {
-    final response = await http.get(Uri.parse('$baseUrl/api/solmate?pubkey=$pubkey'));
+    final response = await http.get(Uri.parse('$_baseUrl/api/solmate?pubkey=$pubkey'));
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
       return body; // Can be null if not found
@@ -18,7 +18,7 @@ class SolmateBackendApi {
 
   Future<void> createSolmate(String pubkey, String name, String animal) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/solmate'),
+      Uri.parse('$_baseUrl/api/solmate'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'pubkey': pubkey, 'name': name, 'animal': animal}),
     );
@@ -29,7 +29,7 @@ class SolmateBackendApi {
 
   Future<Map<String, dynamic>> feedSolmate(String pubkey) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/solmate/feed'),
+      Uri.parse('$_baseUrl/api/solmate/feed'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'pubkey': pubkey}),
     );
@@ -42,7 +42,7 @@ class SolmateBackendApi {
 
   Future<Map<String, dynamic>> petSolmate(String pubkey) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/solmate/pet'),
+      Uri.parse('$_baseUrl/api/solmate/pet'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'pubkey': pubkey}),
     );
@@ -55,7 +55,7 @@ class SolmateBackendApi {
 
   Future<Map<String, dynamic>> run(String pubkey, int score) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/solmate/run'),
+      Uri.parse('$_baseUrl/api/solmate/run'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'pubkey': pubkey, 'score': score}),
     );
@@ -75,7 +75,7 @@ class SolmateBackendApi {
       }
     }
 
-    final url = Uri.parse('$baseUrl/api/solmate/decorations');
+    final url = Uri.parse('$_baseUrl/api/solmate/decorations');
     final body = jsonEncode({
       'pubkey': pubkey,
       // The backend expects the name and url properties, so we use toJson.
@@ -94,7 +94,7 @@ class SolmateBackendApi {
   }
 
   Future<void> saveSelectedBackground(String pubkey, String backgroundUrl) async {
-    final url = Uri.parse('$baseUrl/api/solmate/background');
+    final url = Uri.parse('$_baseUrl/api/solmate/background');
     final body = jsonEncode({
       'pubkey': pubkey,
       'backgroundUrl': backgroundUrl,
@@ -113,7 +113,7 @@ class SolmateBackendApi {
 
   Future<Map<String, dynamic>> cleanPoo(String pubkey) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/solmate/clean'),
+      Uri.parse('$_baseUrl/api/solmate/clean'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'pubkey': pubkey}),
     );

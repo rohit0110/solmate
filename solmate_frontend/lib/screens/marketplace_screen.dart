@@ -419,7 +419,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                     children: [
                       // Asset Image
                       Image.network(
-                        'http://10.0.2.2:3000${asset.url}',
+                        '${dotenv.env['BACKEND_URL']!}${asset.url}',
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.contain, // Use contain for decorations
@@ -524,7 +524,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 ? Center(child: Text('SOLMATE', style: TextStyle(color: colorScheme.onSurface)))
                                 : selectedAsset != null
                                     ? Image.network(
-                                        'http://10.0.2.2:3000${selectedAsset.url}',
+                                        '${dotenv.env['BACKEND_URL']!}${selectedAsset.url}',
                                         fit: BoxFit.contain,
                                         errorBuilder: (ctx, err, st) => const Icon(Icons.error, color: Colors.red),
                                       )
@@ -579,7 +579,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               children: [
                 // Background Image
                 Image.network(
-                  'http://10.0.2.2:3000${background.url}',
+                  '${dotenv.env['BACKEND_URL']!}${background.url}',
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,

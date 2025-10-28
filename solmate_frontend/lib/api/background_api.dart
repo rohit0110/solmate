@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BackgroundApi {
-  // For Android emulator, 10.0.2.2 points to the host machine's localhost
-  static const String _baseUrl = 'http://10.0.2.2:3000';
+  static final String _baseUrl = dotenv.env['BACKEND_URL']!;
 
   static Future<List<dynamic>> getBackgrounds(String pubkey) async {
     final response = await http.get(Uri.parse('$_baseUrl/api/backgrounds?pubkey=$pubkey'));

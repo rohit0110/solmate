@@ -1,4 +1,5 @@
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -228,7 +229,7 @@ class SolmateCard extends StatelessWidget {
                       children: [
                         // Background Layer
                         if (backgroundUrl != null)
-                          Image.network('http://10.0.2.2:3000$backgroundUrl',
+                          Image.network('${dotenv.env['BACKEND_URL']!}$backgroundUrl',
                               width: effectiveDisplaySize,
                               height: effectiveDisplaySize,
                               fit: BoxFit.cover),
@@ -243,7 +244,7 @@ class SolmateCard extends StatelessWidget {
                             height: cellSize,
                             child: Center(
                               child: Image.network(
-                                  'http://10.0.2.2:3000${asset.url}',
+                                  '${dotenv.env['BACKEND_URL']!}${asset.url}',
                                   width: cellSize * 0.8, height: cellSize * 0.8),
                             ),
                           );

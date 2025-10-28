@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DecorApi {
-  static const String _baseUrl = 'http://10.0.2.2:3000';
+  static final String _baseUrl = dotenv.env['BACKEND_URL']!;
 
   static Future<List<dynamic>> getDecorations(String pubkey) async {
     try {

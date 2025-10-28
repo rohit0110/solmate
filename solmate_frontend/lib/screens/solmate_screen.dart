@@ -382,7 +382,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                 // Background Layer
                                 if (_selectedBackgroundUrl != null)
                                   Image.network(
-                                    'http://10.0.2.2:3000$_selectedBackgroundUrl',
+                                    '${dotenv.env['BACKEND_URL']!}$_selectedBackgroundUrl',
                                     width: gridDisplaySize,
                                     height: gridDisplaySize,
                                     fit: BoxFit.cover,
@@ -400,7 +400,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                     height: cellSize,
                                     child: Center(
                                       child: Image.network(
-                                        'http://10.0.2.2:3000${asset.url}',
+                                        '${dotenv.env['BACKEND_URL']!}${asset.url}',
                                         width: cellSize * 0.8,
                                         height: cellSize * 0.8,
                                         fit: BoxFit.contain,
