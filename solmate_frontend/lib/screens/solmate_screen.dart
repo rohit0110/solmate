@@ -14,6 +14,7 @@ import 'package:solmate_frontend/models/decoration_asset.dart';
 import 'package:solmate_frontend/screens/run_game_screen.dart';
 import 'package:solmate_frontend/screens/marketplace_screen.dart';
 import 'package:solmate_frontend/screens/home_screen.dart';
+import 'package:solmate_frontend/screens/share_screen.dart';
 import 'package:solmate_frontend/screens/survival_leaderboard_screen.dart';
 
 class SolmateScreen extends StatefulWidget {
@@ -504,7 +505,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
                         ),
                         const SizedBox(height: 20),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _HardwareButton(
                               icon: Icons.shopping_cart,
@@ -536,6 +537,20 @@ class _SolmateScreenState extends State<SolmateScreen> {
                                     _message = "Changes saved!";
                                   });
                                 }
+                              },
+                            ),
+                            _HardwareButton(
+                              icon: Icons.share,
+                              label: 'Share',
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ShareScreen(
+                                      publicKey: widget.publicKey,
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                             _HardwareButton(

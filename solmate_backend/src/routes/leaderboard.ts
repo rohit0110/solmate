@@ -109,7 +109,7 @@ router.get('/survival', async (req, res) => {
             pubkey, name, created_at, animal,
             DENSE_RANK() OVER (ORDER BY created_at ASC) as rank
           FROM solmates
-          WHERE created_at IS NOT NULL
+          WHERE created_at IS NOT NULL AND (strftime('%s', 'now') - strftime('%s', last_fed_at)) < 90000
         )
         WHERE rank <= 20
         ORDER BY rank ASC`
@@ -151,7 +151,7 @@ router.get('/survival', async (req, res) => {
                 pubkey, name, created_at, animal,
                 DENSE_RANK() OVER (ORDER BY created_at ASC) as rank
               FROM solmates
-              WHERE created_at IS NOT NULL
+              WHERE created_at IS NOT NULL AND (strftime('%s', 'now') - strftime('%s', last_fed_at)) < 90000
             )
             WHERE pubkey = ?`,
             userPubkey

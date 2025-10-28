@@ -32,6 +32,9 @@ export async function openDb(): Promise<Database> {
         has_poo BOOLEAN NOT NULL DEFAULT 0,
         last_fed_at TIMESTAMP WITH TIME ZONE NOT NULL,
         last_pet_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        poos_cleaned INTEGER NOT NULL DEFAULT 0,
+        pets_given INTEGER NOT NULL DEFAULT 0,
+        food_fed INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
@@ -82,6 +85,18 @@ export async function openDb(): Promise<Database> {
   if (!columnNames.includes('selected_background')) {
     await db.exec('ALTER TABLE solmates ADD COLUMN selected_background VARCHAR(255)');
     console.log('Added "selected_background" column to solmates table.');
+  }
+  if (!columnNames.includes('poos_cleaned')) {
+    await db.exec('ALTER TABLE solmates ADD COLUMN poos_cleaned INTEGER NOT NULL DEFAULT 0');
+    console.log('Added "poos_cleaned" column to solmates table.');
+  }
+  if (!columnNames.includes('pets_given')) {
+    await db.exec('ALTER TABLE solmates ADD COLUMN pets_given INTEGER NOT NULL DEFAULT 0');
+    console.log('Added "pets_given" column to solmates table.');
+  }
+  if (!columnNames.includes('food_fed')) {
+    await db.exec('ALTER TABLE solmates ADD COLUMN food_fed INTEGER NOT NULL DEFAULT 0');
+    console.log('Added "food_fed" column to solmates table.');
   }
 
   console.log('Database tables are ready.');
