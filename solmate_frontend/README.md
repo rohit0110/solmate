@@ -21,17 +21,35 @@ Solmate is an innovative Flutter project that brings a Tamagotchi-like digital p
 The Solmate frontend guides users through several key screens:
 
 *   **Home Screen (`HomeScreen`):** The entry point for the application. Facilitates connecting your Solana mobile wallet.
+<img width="108" height="240" alt="Screenshot_20251029_163406" src="https://github.com/user-attachments/assets/2dc792fd-0de1-4bc3-8cb5-15aa12cb334a" />
+
 *   **Solmate Selection Screen (`SolmateSelectionScreen`):** If you don't have a Solmate yet, this screen allows you to choose your first digital companion from a selection of animals.
+<img width="108" height="240" alt="Screenshot_20251029_163608" src="https://github.com/user-attachments/assets/4903c4d3-57d4-474d-b24a-c12fc4332a98" />
+
 *   **Solmate Hatching Screen (`SolmateHatchingScreen`):** After selecting an animal, you'll name your Solmate and mint its associated NFT (or create its record in the backend).
+<img width="108" height="240" alt="Screenshot_20251029_163626" src="https://github.com/user-attachments/assets/93b1c25c-4c96-4420-a75a-cf5f644ca236" />
+
 *   **Solmate Screen (`SolmateScreen`):** The main interaction hub. Here you can:
     *   View your Solmate's health, happiness, level, and XP.
     *   Feed, pet, emote, and clean up after your Solmate. Feeding is a Memo Tx
     *   Access the Marketplace, Run Game, Leaderboards, and Share features.
+ <img width="108" height="240" alt="Screenshot_20251029_164037" src="https://github.com/user-attachments/assets/838decf7-62c4-47bc-ab27-f9be2e7dfe2a" />
+
 *   **Marketplace Screen (`MarketplaceScreen`):** Browse and purchase various decorations and backgrounds for your Solmate. Items can be unlocked by level or bought with SOL.
+  <img width="108" height="240" alt="Screenshot_20251029_164021" src="https://github.com/user-attachments/assets/c25453d5-b184-4f91-93ac-625450d62d79" />
+<img width="108" height="240" alt="Screenshot_20251029_164028" src="https://github.com/user-attachments/assets/a689aca0-770c-4109-8590-423333fc91f3" />
+
 *   **Run Game Screen (`RunGameScreen`):** A simple side-scrolling mini-game where your Solmate jumps over obstacles. Earn XP and high scores.
+  <img width="108" height="240" alt="Screenshot_20251029_163701" src="https://github.com/user-attachments/assets/ffe9edd1-6012-492c-b76c-a391e02d64d1" />
+
 *   **Leaderboard Screen (`LeaderboardScreen`):** Displays the global leaderboard based on run high scores.
+  <img width="108" height="240" alt="Screenshot_20251029_163919" src="https://github.com/user-attachments/assets/bbe6813a-0c98-4c0d-918d-b8efed72d5a9" />
+
 *   **Survival Leaderboard Screen (`SurvivalLeaderboardScreen`):** Displays a leaderboard based on how long Solmates have survived (stayed fed).
 *   **Share Screen (`ShareScreen`):** Allows you to generate and share an image of your Solmate, with or without its background and decorations.
+  <img width="108" height="240" alt="Screenshot_20251029_163956" src="https://github.com/user-attachments/assets/d27897f0-e4b6-4222-a6b0-1dbf0b596b76" />
+<img width="108" height="240" alt="Screenshot_20251029_163947" src="https://github.com/user-attachments/assets/92b0f471-101a-425c-aab2-9f2f63429be7" />
+
 
 ## Getting Started
 
@@ -70,3 +88,5 @@ This project requires both the Flutter frontend and a running Node.js backend.
 ## Android Widget
 
 The project also includes an Android App Widget that displays your Solmate's image and name, providing a quick glance at your digital companion directly from your home screen.
+
+<img width="108" height="240" alt="Screenshot_20251029_114144" src="https://github.com/user-attachments/assets/b92f5b95-03d7-4c89-a3f2-b79079214336" />
