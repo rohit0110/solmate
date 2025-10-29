@@ -70,7 +70,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return const Center(child: Text('Error loading leaderboard.'));
           } else if (!snapshot.hasData || snapshot.data!.leaderboard.isEmpty) {
             return const Center(child: Text('No leaderboard data available.'));
           } else {

@@ -1,5 +1,5 @@
 
-import { openDb } from '../src/db/database.js';
+import { query, pool } from '../src/db/database.js';
 import { randomBytes } from 'crypto';
 
 // Function to generate a random public key (for testing purposes)
@@ -15,12 +15,9 @@ const names = [
 ];
 
 async function seedLeaderboard() {
-  let db;
   try {
-    db = await openDb();
-
     // Clear existing data in the solmates table to ensure a fresh start
-    await db.run('DELETE FROM solmates');
+    await query('DELETE FROM solmates');
     console.log('Cleared existing data from solmates table.');
 
     for (let i = 0; i < 30; i++) {
@@ -31,9 +28,9 @@ async function seedLeaderboard() {
       const animal = 'dragon'; // Default animal
       const now = new Date().toISOString();
 
-      await db.run(
+      await query(
         `INSERT INTO solmates (pubkey, name, level, run_highscore, animal, last_fed_at, last_pet_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [pubkey, name, level, run_highscore, animal, now, now]
       );
       console.log(`Inserted ${name} with highscore ${run_highscore}`);
@@ -43,7 +40,7 @@ async function seedLeaderboard() {
   } catch (error) {
     console.error('Failed to seed leaderboard:', error);
   } finally {
-    await db?.close();
+    await pool.end();
   }
 }
 

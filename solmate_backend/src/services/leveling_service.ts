@@ -1,4 +1,4 @@
-import { Database } from 'sqlite';
+import { query } from '../db/database.js';
 
 // --- XP & Leveling Constants ---
 export const XP_FOR_PET = 10;
@@ -35,12 +35,12 @@ export function getLevelFromXp(xp: number): number {
 
 /**
  * Adds XP to a solmate and handles level-up logic.
- * @param db The database instance.
  * @param pubkey The public key of the solmate's owner.
  * @param amount The amount of XP to add.
  */
-export async function addXp(db: Database, pubkey: string, amount: number) {
-    const solmate = await db.get('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+export async function addXp(pubkey: string, amount: number) {
+    const { rows: solmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+    const solmate = solmateRows[0];
     if (!solmate) {
         console.warn(`Attempted to add XP to non-existent solmate with pubkey: ${pubkey}`);
         return;
@@ -51,10 +51,10 @@ export async function addXp(db: Database, pubkey: string, amount: number) {
 
     if (newLevel > solmate.level) {
         // Level up!
-        await db.run('UPDATE solmates SET xp = ?, level = ?, updated_at = ? WHERE pubkey = ?', [newXp, newLevel, new Date().toISOString(), pubkey]);
+        await query('UPDATE solmates SET xp = $1, level = $2, updated_at = $3 WHERE pubkey = $4', [newXp, newLevel, new Date().toISOString(), pubkey]);
         console.log(`Solmate ${solmate.name} (${pubkey}) leveled up to level ${newLevel}!`);
     } else {
         // Just add XP
-        await db.run('UPDATE solmates SET xp = ?, updated_at = ? WHERE pubkey = ?', [newXp, new Date().toISOString(), pubkey]);
+        await query('UPDATE solmates SET xp = $1, updated_at = $2 WHERE pubkey = $3', [newXp, new Date().toISOString(), pubkey]);
     }
 }

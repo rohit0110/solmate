@@ -107,7 +107,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load marketplace data: $e')),
+        const SnackBar(content: Text('Failed to load marketplace data.'), backgroundColor: Color(0xffe76e55),),
       );
     }
   }
@@ -200,7 +200,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Purchase successful! Asset unlocked.')),
+        const SnackBar(content: Text('Purchase successful! Asset unlocked.'), backgroundColor: Color(0xff92cc41),),
       );
 
       // Refresh data to show unlocked asset
@@ -208,7 +208,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Purchase failed: $e')),
+        const SnackBar(content: Text('Purchase failed. Please try again.'), backgroundColor: Color(0xffe76e55),),
       );
     } finally {
       if (session != null) {
@@ -260,7 +260,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save changes: $e')),
+          const SnackBar(content: Text('Failed to save changes.'), backgroundColor: Color(0xffe76e55),),
         );
         setState(() {
           _isSaving = false;
@@ -419,7 +419,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                     children: [
                       // Asset Image
                       Image.network(
-                        'http://10.0.2.2:3000${asset.url}',
+                        '${dotenv.env['BACKEND_URL']!}${asset.url}',
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.contain, // Use contain for decorations
@@ -524,7 +524,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 ? Center(child: Text('SOLMATE', style: TextStyle(color: colorScheme.onSurface)))
                                 : selectedAsset != null
                                     ? Image.network(
-                                        'http://10.0.2.2:3000${selectedAsset.url}',
+                                        '${dotenv.env['BACKEND_URL']!}${selectedAsset.url}',
                                         fit: BoxFit.contain,
                                         errorBuilder: (ctx, err, st) => const Icon(Icons.error, color: Colors.red),
                                       )
@@ -579,7 +579,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               children: [
                 // Background Image
                 Image.network(
-                  'http://10.0.2.2:3000${background.url}',
+                  '${dotenv.env['BACKEND_URL']!}${background.url}',
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,

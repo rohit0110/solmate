@@ -75,7 +75,7 @@ class _SurvivalLeaderboardScreenState extends State<SurvivalLeaderboardScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('Error Loading Leaderboard'));
           } else if (!snapshot.hasData || snapshot.data!.leaderboard.isEmpty) {
             return const Center(child: Text('No leaderboard data available.'));
           } else {

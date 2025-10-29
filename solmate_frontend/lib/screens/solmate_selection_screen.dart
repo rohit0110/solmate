@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:nes_ui/nes_ui.dart'; // Added nes_ui import
-import 'package:solmate_frontend/screens/solmate_data.dart';
+import 'package:nes_ui/nes_ui.dart';
+import 'package:solmate_frontend/models/solmate_data.dart';
 import 'package:solmate_frontend/screens/solmate_hatching_screen.dart';
 
 class SolmateSelectionScreen extends StatefulWidget {
@@ -44,7 +44,7 @@ class _SolmateSelectionScreenState extends State<SolmateSelectionScreen> {
     if (_selectedPublicKey == null || _authToken == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: Public key or auth token not available.',
-          style: TextStyle(color: Theme.of(context).colorScheme.onError))),
+          style: TextStyle(color: Theme.of(context).colorScheme.onError)), backgroundColor: Color(0xffe76e55),),
       );
       return;
     }

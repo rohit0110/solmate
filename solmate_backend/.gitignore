@@ -1,3 +1,4 @@
 /node_modules
 /solmate.db
 /poo.txt
+.env

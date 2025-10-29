@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import config from '../config/config.js';
-import { openDb } from '../db/database.js';
+import { query } from '../db/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,18 +14,18 @@ router.get('/', async (req, res) => {
   const userPubkey = req.query.pubkey as string;
 
   try {
-    const db = await openDb();
     let userLevel = 1;
     let unlockedAssets = new Set();
 
     if (userPubkey) {
-      const user = await db.get('SELECT level FROM solmates WHERE pubkey = ?', userPubkey);
+      const { rows: userRows } = await query('SELECT level FROM solmates WHERE pubkey = $1', [userPubkey]);
+      const user = userRows[0];
       if (user) {
         userLevel = user.level;
       }
 
-      const purchased = await db.all('SELECT asset_id FROM unlocked_assets WHERE user_pubkey = ?', userPubkey);
-      unlockedAssets = new Set(purchased.map(p => p.asset_id));
+      const { rows: purchasedRows } = await query('SELECT asset_id FROM unlocked_assets WHERE user_pubkey = $1', [userPubkey]);
+      unlockedAssets = new Set(purchasedRows.map(p => p.asset_id));
     }
 
     const manifestPath = path.join(__dirname, '..', 'assets', 'background', 'manifest.json');

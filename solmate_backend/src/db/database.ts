@@ -1,46 +1,62 @@
-import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
+import { Pool } from 'pg';
+import config from '../config/config.js';
 
-let db: Database<sqlite3.Database, sqlite3.Statement>;
+// Ensure the DATABASE_URL is configured.
+if (!config.databaseUrl) {
+  throw new Error('DATABASE_URL is not configured in config.ts. Please ensure it\'s set in your .env file.');
+}
 
 /**
- * Opens a connection to the SQLite database and creates tables if they don't exist.
- * @returns {Promise<Database>} The database connection object.
+ * The connection pool for the PostgreSQL database.
+ * It uses the DATABASE_URL from the environment variables.
  */
-export async function openDb(): Promise<Database> {
-  if (db) {
-    return db;
-  }
+export const pool = new Pool({
+  connectionString: config.databaseUrl,
+  // Supabase requires SSL. This configuration is common for cloud-hosted databases.
+  // In production, you might want to use a more secure setup with a specific CA certificate.
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
 
-  db = await open({
-    filename: './solmate.db',
-    driver: sqlite3.Database,
-  });
+/**
+ * A convenience function to run queries against the connection pool.
+ * @param text The SQL query string.
+ * @param params The parameters to pass to the query.
+ * @returns The result of the query.
+ */
+export const query = (text: string, params?: any[]) => pool.query(text, params);
 
-  console.log('Connected to the SQLite database.');
+/**
+ * Initializes the database by creating tables if they don't already exist.
+ * This function should be called once when the application starts.
+ */
+export async function initializeDatabase() {
+  const client = await pool.connect();
+  console.log('Connected to the PostgreSQL database.');
 
-  // Use serialize to run one statement at a time
-  await db.exec(`
+  // This query contains the final schema for all tables, adapted for PostgreSQL.
+  const createTablesQuery = `
     CREATE TABLE IF NOT EXISTS solmates (
         pubkey VARCHAR(255) PRIMARY KEY,
         name VARCHAR(20) NOT NULL,
-        level INTEGER NOT NULL,
+        level INTEGER NOT NULL DEFAULT 1,
         xp INTEGER NOT NULL DEFAULT 0,
         run_highscore INTEGER NOT NULL DEFAULT 0,
         animal VARCHAR(50) NOT NULL,
         selected_background VARCHAR(255),
-        has_poo BOOLEAN NOT NULL DEFAULT 0,
-        last_fed_at TIMESTAMP WITH TIME ZONE NOT NULL,
-        last_pet_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        has_poo BOOLEAN NOT NULL DEFAULT FALSE,
+        last_fed_at TIMESTAMPTZ NOT NULL,
+        last_pet_at TIMESTAMPTZ NOT NULL,
         poos_cleaned INTEGER NOT NULL DEFAULT 0,
         pets_given INTEGER NOT NULL DEFAULT 0,
         food_fed INTEGER NOT NULL DEFAULT 0,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS selected_decorations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         solmate_pubkey VARCHAR(255) NOT NULL,
         row INTEGER NOT NULL,
         col INTEGER NOT NULL,
@@ -51,55 +67,29 @@ export async function openDb(): Promise<Database> {
     );
 
     CREATE TABLE IF NOT EXISTS unlocked_assets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_pubkey VARCHAR(255) NOT NULL,
         asset_id VARCHAR(255) NOT NULL, -- e.g., 'decoration_chair' or 'background_day'
         purchase_transaction_signature VARCHAR(255),
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_pubkey) REFERENCES solmates (pubkey) ON DELETE CASCADE,
         UNIQUE (user_pubkey, asset_id)
     );
 
     CREATE TABLE IF NOT EXISTS processed_transactions (
         signature VARCHAR(255) PRIMARY KEY,
-        processed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        processed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
-  `);
+  `;
 
-  // Add columns if they don't exist for existing tables
-  const columns = await db.all('PRAGMA table_info(solmates)');
-  const columnNames = columns.map((c: any) => c.name);
-
-  if (!columnNames.includes('level')) {
-    await db.exec('ALTER TABLE solmates ADD COLUMN level INTEGER NOT NULL DEFAULT 1');
-    console.log('Added "level" column to solmates table.');
+  try {
+    await client.query(createTablesQuery);
+    console.log('Database tables are ready.');
+  } catch (err) {
+    console.error('Error creating database tables:', err);
+    throw err;
+  } finally {
+    // Release the client back to the pool.
+    client.release();
   }
-  if (!columnNames.includes('xp')) {
-    await db.exec('ALTER TABLE solmates ADD COLUMN xp INTEGER NOT NULL DEFAULT 0');
-    console.log('Added "xp" column to solmates table.');
-  }
-  if (!columnNames.includes('run_highscore')) {
-    await db.exec('ALTER TABLE solmates ADD COLUMN run_highscore INTEGER NOT NULL DEFAULT 0');
-    console.log('Added "run_highscore" column to solmates table.');
-  }
-  if (!columnNames.includes('selected_background')) {
-    await db.exec('ALTER TABLE solmates ADD COLUMN selected_background VARCHAR(255)');
-    console.log('Added "selected_background" column to solmates table.');
-  }
-  if (!columnNames.includes('poos_cleaned')) {
-    await db.exec('ALTER TABLE solmates ADD COLUMN poos_cleaned INTEGER NOT NULL DEFAULT 0');
-    console.log('Added "poos_cleaned" column to solmates table.');
-  }
-  if (!columnNames.includes('pets_given')) {
-    await db.exec('ALTER TABLE solmates ADD COLUMN pets_given INTEGER NOT NULL DEFAULT 0');
-    console.log('Added "pets_given" column to solmates table.');
-  }
-  if (!columnNames.includes('food_fed')) {
-    await db.exec('ALTER TABLE solmates ADD COLUMN food_fed INTEGER NOT NULL DEFAULT 0');
-    console.log('Added "food_fed" column to solmates table.');
-  }
-
-  console.log('Database tables are ready.');
-
-  return db;
 }

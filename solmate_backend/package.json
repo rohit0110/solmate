@@ -21,12 +21,12 @@
   "type": "module",
   "dependencies": {
     "@solana/web3.js": "^1.98.4",
+    "@types/pg": "^8.15.6",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "node-cron": "^4.2.1",
-    "sharp": "^0.33.4",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "pg": "^8.16.3",
+    "sharp": "^0.33.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

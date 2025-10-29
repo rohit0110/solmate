@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { openDb } from '../db/database.js';
+import { query } from '../db/database.js';
 import { addXp, HOURLY_XP_CRON } from '../services/leveling_service.js';
 
 /**
@@ -10,8 +10,7 @@ export function startXpCronJob() {
   cron.schedule('0 * * * *', async () => {
     console.log('Running hourly XP CRON job...');
     try {
-      const db = await openDb();
-      const solmates = await db.all('SELECT pubkey FROM solmates');
+      const { rows: solmates } = await query('SELECT pubkey FROM solmates');
 
       if (solmates.length === 0) {
         console.log('No solmates found, skipping XP distribution.');
@@ -22,7 +21,7 @@ export function startXpCronJob() {
 
       // Use Promise.all to handle all updates concurrently
       await Promise.all(solmates.map(solmate => 
-        addXp(db, solmate.pubkey, HOURLY_XP_CRON)
+        addXp(solmate.pubkey, HOURLY_XP_CRON)
       ));
 
       console.log('Hourly XP distribution complete.');

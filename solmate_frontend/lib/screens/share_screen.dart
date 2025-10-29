@@ -1,4 +1,5 @@
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -64,7 +65,11 @@ class _ShareScreenState extends State<ShareScreen> {
       setState(() {
         _isLoading = false;
       });
-      // Handle error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load Solmate data.'), backgroundColor: Color(0xffe76e55),),
+        );
+      }
     }
   }
 
@@ -228,7 +233,7 @@ class SolmateCard extends StatelessWidget {
                       children: [
                         // Background Layer
                         if (backgroundUrl != null)
-                          Image.network('http://10.0.2.2:3000$backgroundUrl',
+                          Image.network('${dotenv.env['BACKEND_URL']!}$backgroundUrl',
                               width: effectiveDisplaySize,
                               height: effectiveDisplaySize,
                               fit: BoxFit.cover),
@@ -243,7 +248,7 @@ class SolmateCard extends StatelessWidget {
                             height: cellSize,
                             child: Center(
                               child: Image.network(
-                                  'http://10.0.2.2:3000${asset.url}',
+                                  '${dotenv.env['BACKEND_URL']!}${asset.url}',
                                   width: cellSize * 0.8, height: cellSize * 0.8),
                             ),
                           );
