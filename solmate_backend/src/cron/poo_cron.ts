@@ -6,7 +6,7 @@ import { query } from '../db/database.js';
  */
 export function startPooCronJob() {
   // Schedule a job to run every hour
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('0 * * * *', async () => {
     console.log('Running hourly poo CRON job...');
     try {
       // Get all solmates that haven't pooed yet
