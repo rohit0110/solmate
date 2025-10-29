@@ -6,10 +6,10 @@ class SolmateApi {
   static final String _baseUrl = dotenv.env['BACKEND_URL']!;
 
   static Future<Map<String, String>> getSprites(String animalName, String publicKey) async {
+    final animalLower = animalName.toLowerCase();
     final response = await http.get(
-      Uri.parse('$_baseUrl/api/sprite/$animalName/$publicKey'),
+      Uri.parse('$_baseUrl/api/sprite/$animalLower/$publicKey'),
     );
-
     if (response.statusCode == 200) {
       // If the server returns a 200 OK response, then parse the JSON.
       final Map<String, dynamic> data = jsonDecode(response.body);

@@ -20,7 +20,7 @@ class SolmateBackendApi {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/solmate'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'pubkey': pubkey, 'name': name, 'animal': animal}),
+      body: jsonEncode({'pubkey': pubkey, 'name': name, 'animal': animal.toLowerCase()}),
     );
     if (response.statusCode != 201) {
       throw Exception('Failed to create solmate: ${response.body}');

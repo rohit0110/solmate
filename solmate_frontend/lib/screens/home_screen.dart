@@ -39,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final solmateData = await _api.getSolmateData(pubkeyString);
 
       if (solmateData != null) {
+        print('DEBUG: Animal name from solmateData: ${solmateData['animal']}');
         final spriteData = await SolmateApi.getSprites(solmateData['animal'], pubkeyString);
         Navigator.pushReplacement(
           context,
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     } catch (e) {
-      print(e);
+      print("HERE $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error connecting to wallet. Please try again.'), 
