@@ -232,7 +232,7 @@ class _SolmateScreenState extends State<SolmateScreen> {
       return;
     }
     setState(() {
-      _message = "Petting your Solmate...";
+      _message = "You pet your Solmate!";
     });
     try {
       final data = await _api.petSolmate(widget.publicKey);

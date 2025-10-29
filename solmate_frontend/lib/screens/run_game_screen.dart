@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:nes_ui/nes_ui.dart';
 import 'package:solmate_frontend/api/solmate_api.dart';
 import 'package:solmate_frontend/screens/leaderboard_screen.dart';
+import 'dart:math';
 
 class RunGameScreen extends StatefulWidget {
   final Uint8List solmateImageBytes;
@@ -25,6 +26,20 @@ class RunGameScreen extends StatefulWidget {
   State<RunGameScreen> createState() => _RunGameScreenState();
 }
 
+class _Cloud {
+  double x;
+  double y;
+  double width;
+  double speed;
+
+  _Cloud({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.speed,
+  });
+}
+
 class _RunGameScreenState extends State<RunGameScreen> {
   final SolmateBackendApi _api = SolmateBackendApi();
   late double playerWidth;
@@ -40,6 +55,7 @@ class _RunGameScreenState extends State<RunGameScreen> {
   final double jumpVelocity = -500.0; // pixels per second
 
   List<double> obstacleX = [400.0, 700.0];
+  final List<_Cloud> _clouds = [];
   int score = 0;
   late int _highScore;
   bool isGameOver = false;
@@ -50,6 +66,23 @@ class _RunGameScreenState extends State<RunGameScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     gameAreaHeight = MediaQuery.of(context).size.height * 0.6;
+    if (_clouds.isEmpty) {
+      _initializeClouds();
+    }
+  }
+
+  void _initializeClouds() {
+    final random = Random();
+    final screenWidth = MediaQuery.of(context).size.width;
+    _clouds.clear();
+    for (int i = 0; i < 5; i++) {
+      _clouds.add(_Cloud(
+        x: random.nextDouble() * screenWidth,
+        y: gameAreaHeight * 0.6 + random.nextDouble() * (gameAreaHeight * 0.3),
+        width: random.nextDouble() * 40 + 30,
+        speed: random.nextDouble() * 20 + 10,
+      ));
+    }
   }
 
   @override
@@ -95,13 +128,22 @@ class _RunGameScreenState extends State<RunGameScreen> {
         playerVelocityY = 0;
       }
 
-      // Update obstacle positions
-      for (int i = 0; i < obstacleX.length; i++) {
-        obstacleX[i] -= gameSpeed * deltaTime;
+      // Update cloud positions
+      final random = Random();
+      final screenWidth = MediaQuery.of(context).size.width;
+      for (final cloud in _clouds) {
+        cloud.x -= cloud.speed * deltaTime;
+        if (cloud.x + cloud.width < 0) {
+          cloud.x = screenWidth;
+          cloud.y =
+              gameAreaHeight * 0.6 + random.nextDouble() * (gameAreaHeight * 0.3);
+          cloud.speed = random.nextDouble() * 20 + 10;
+        }
       }
 
-      // Check for collision (use a constrained game area so visuals sit near middle)
-      final double screenW = MediaQuery.of(context).size.width;
+      // Update obstacle positions and check for collisions
+      const minGap = 150.0;
+      const maxGap = 300.0;
 
       final playerRect = Rect.fromLTWH(
         50,
@@ -111,14 +153,16 @@ class _RunGameScreenState extends State<RunGameScreen> {
       );
 
       for (int i = 0; i < obstacleX.length; i++) {
+        obstacleX[i] -= gameSpeed * deltaTime;
         final x = obstacleX[i];
+
         final obstacleRect = Rect.fromLTWH(
           x,
           gameAreaHeight - groundHeight - obstacleHeight,
           obstacleWidth,
           obstacleHeight,
         );
-        if (playerRect.overlaps(obstacleRect)) {
+        if (!isGameOver && playerRect.overlaps(obstacleRect)) {
           isGameOver = true;
           gameLoopTimer?.cancel();
           if (score > widget.highScore) {
@@ -126,15 +170,21 @@ class _RunGameScreenState extends State<RunGameScreen> {
               print("Failed to submit score automatically: $e");
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Failed to submit score.'), backgroundColor: Color(0xffe76e55),),
+                  const SnackBar(
+                    content: Text('Failed to submit score.'),
+                    backgroundColor: Color(0xffe76e55),
+                  ),
                 );
               }
             });
           }
         }
+
         if (x < -obstacleWidth) {
-          // reset obstacle off the right edge
-          obstacleX[i] = screenW + 100.0;
+          // Reset obstacle with a random gap
+          final maxObstacleX = obstacleX.reduce(max);
+          obstacleX[i] =
+              maxObstacleX + minGap + random.nextDouble() * (maxGap - minGap);
           score++;
           if (score > _highScore) {
             _highScore = score;
@@ -187,6 +237,16 @@ class _RunGameScreenState extends State<RunGameScreen> {
                 backgroundColor: colorScheme.surface,
                 child: Stack(
                   children: [
+                    // Clouds
+                    ..._clouds.map((cloud) => Positioned(
+                          left: cloud.x,
+                          bottom: cloud.y,
+                          child: NesContainer(
+                            width: cloud.width,
+                            height: 20,
+                            backgroundColor: Colors.white.withOpacity(0.8),
+                          ),
+                        )),
                     // Player
                     Positioned(
                       left: 50,

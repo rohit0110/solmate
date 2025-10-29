@@ -20,22 +20,22 @@ DONE:
 [x] HIGH: Special solmate logic for tuli [Decided to keep as separate sprite, no unique logic]
 [x] MEDIUM: share button to generate a card you can post on twitter etc
 [x] HIGH: Surivival leaderboard needs to check if solmate is alive
+[x] MEDIUM: Error Handling and edgecase handling (eg: not selecting a wallet) [Unable_to_fix_not_selecting_wallet_issue_since_await_breaks_functionality]
+[x] MEDIUM: Text on the Solmate_screen feels very fidgety and wonky whenever interactions take place
+[x] LOW: run_game_screen needs more robust logic for obstacles
+[x] LOW: run_game_screen needs background ui in game screen
 
 TODO:
-[] LOW: run_game_screen needs more robust logic for obstacles
-[] LOW: run_game_screen needs background ui in game screen
 [] LOW: run_game_screen needs something at bottom of screen which is empty
 [] LOW: fix solmate_screen widget heart and happiness to be pixelated
 [] LOW: level doesnt get updated if already in solmate_screen
 [] HIGH: Mint NFT in metaplex [partial signing from mint account not working, needs a fix]
 [] LOW: Add ratelimiting
-[] MEDIUM: Text on the Solmate_screen feels very fidgety and wonky whenever interactions take place
 [] LOW: Transition from marketplace to solmate screen feels wonky because of loading screen flashing for brief second
-[] MEDIUM: Error Handling and edgecase handling (eg: not selecting a wallet)
 [] MEDIUM: Share card for everything has small decorations, needs fix
 
 // AFTER HACKATHON
-[] MEDIUM: Replace Snackbars with NesSnackBars
+[] LOW: Replace Snackbars with NesSnackBars
 
 NOT DOING
 [] MEDIUM: add small buttons in widget to eat and shit
