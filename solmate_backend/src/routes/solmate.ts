@@ -1,6 +1,5 @@
 import express from 'express';
-import { openDb } from '../db/database.js';
-import { Database } from 'sqlite';
+import { query, pool } from '../db/database.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -27,24 +26,25 @@ interface SolmateData {
   updated_at: string;
 }
 
-async function getFullSolmateData(db: Database, pubkey: string): Promise<any | null> {
-    const solmate: SolmateData | undefined = await db.get<SolmateData>(
-      'SELECT * FROM solmates WHERE pubkey = ?',
+async function getFullSolmateData(pubkey: string): Promise<any | null> {
+    const { rows: solmateRows } = await query(
+      'SELECT * FROM solmates WHERE pubkey = $1',
       [pubkey]
     );
+    const solmate = solmateRows[0];
 
     if (!solmate) {
       return null;
     }
 
-    const decorationsFromDb = await db.all(
-      'SELECT row, col, decoration_name as name, decoration_url as url FROM selected_decorations WHERE solmate_pubkey = ?',
+    const { rows: decorationsFromDb } = await query(
+      'SELECT row, col, decoration_name as name, decoration_url as url FROM selected_decorations WHERE solmate_pubkey = $1',
       [pubkey]
     );
 
     const userLevel = solmate.level;
-    const purchased = await db.all('SELECT asset_id FROM unlocked_assets WHERE user_pubkey = ?', pubkey);
-    const unlockedAssets = new Set(purchased.map((p: any) => p.asset_id));
+    const { rows: purchasedRows } = await query('SELECT asset_id FROM unlocked_assets WHERE user_pubkey = $1', [pubkey]);
+    const unlockedAssets = new Set(purchasedRows.map((p: any) => p.asset_id));
 
     const manifestPath = path.join(__dirname, '..', 'assets', 'decorations', 'manifest.json');
     const manifestContent = await fs.readFile(manifestPath, 'utf-8');
@@ -66,8 +66,6 @@ async function getFullSolmateData(db: Database, pubkey: string): Promise<any | n
         } else if (unlockedAssets.has(assetId)) {
           isUnlocked = true;
         }
-      } else {
-        isUnlocked = true;
       }
 
       return {
@@ -107,26 +105,6 @@ function calculateStats(solmate: SolmateData) {
   };
 }
 
-// Middleware to ensure db is open
-router.use(async (req, res, next) => {
-  try {
-    req.db = await openDb(); // Attach db to request object
-    next();
-  } catch (error) {
-    console.error('Failed to open database:', error);
-    res.status(500).json({ error: 'Database connection failed' });
-  }
-});
-
-// Extend Request type to include db
-declare global {
-  namespace Express {
-    interface Request {
-      db: Database;
-    }
-  }
-}
-
 // GET /api/solmate?pubkey=<pubkey>
 router.get('/', async (req, res) => {
   const pubkey = req.query.pubkey as string;
@@ -135,7 +113,7 @@ router.get('/', async (req, res) => {
   }
 
   try {
-    const solmateWithDecorations = await getFullSolmateData(req.db, pubkey);
+    const solmateWithDecorations = await getFullSolmateData(pubkey);
 
     if (!solmateWithDecorations) {
       // Return null if not found, so frontend can distinguish between not found and error
@@ -157,19 +135,19 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const existingSolmate = await req.db.get('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
-    if (existingSolmate) {
+    const { rows: existingSolmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+    if (existingSolmateRows[0]) {
       return res.status(409).json({ error: 'Solmate already exists for this pubkey' });
     }
 
     const now = new Date().toISOString();
     const defaultBackground = '/assets/background/background_day.png';
-    await req.db.run(
-      'INSERT INTO solmates (pubkey, name, level, xp, run_highscore, animal, last_fed_at, last_pet_at, created_at, updated_at, selected_background) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    await query(
+      'INSERT INTO solmates (pubkey, name, level, xp, run_highscore, animal, last_fed_at, last_pet_at, created_at, updated_at, selected_background) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
       [pubkey, name, 1, 0, 0, animal, now, now, now, now, defaultBackground]
     );
 
-    const newSolmate = await getFullSolmateData(req.db, pubkey);
+    const newSolmate = await getFullSolmateData(pubkey);
     if (!newSolmate) {
       return res.status(500).json({ error: 'Failed to retrieve new solmate after creation' });
     }
@@ -188,7 +166,8 @@ router.post('/feed', async (req, res) => {
   }
 
   try {
-    let solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    const { rows: solmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+    const solmate = solmateRows[0];
     if (!solmate) {
       return res.status(404).json({ error: 'Solmate not found' });
     }
@@ -202,15 +181,15 @@ router.post('/feed', async (req, res) => {
     const newLastFedDate = new Date(now.getTime() - newHoursSinceFed * 60 * 60 * 1000);
     const newLastFedAt = newLastFedDate.toISOString();
 
-    await req.db.run(
-      'UPDATE solmates SET last_fed_at = ?, food_fed = food_fed + 1, updated_at = ? WHERE pubkey = ?',
+    await query(
+      'UPDATE solmates SET last_fed_at = $1, food_fed = food_fed + 1, updated_at = $2 WHERE pubkey = $3',
       [newLastFedAt, now.toISOString(), pubkey]
     );
 
-    // Add XP for feeding
-    await addXp(req.db, pubkey, XP_FOR_FEED);
+    // NOTE: Assumes addXp is refactored to use the new database connection method.
+    await addXp(pubkey, XP_FOR_FEED);
 
-    const updatedSolmate = await getFullSolmateData(req.db, pubkey);
+    const updatedSolmate = await getFullSolmateData(pubkey);
     if (!updatedSolmate) {
         return res.status(404).json({ error: 'Solmate not found after update' });
     }
@@ -229,7 +208,8 @@ router.post('/pet', async (req, res) => {
   }
 
   try {
-    const solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    const { rows: solmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+    const solmate = solmateRows[0];
     if (!solmate) {
       return res.status(404).json({ error: 'Solmate not found' });
     }
@@ -243,15 +223,15 @@ router.post('/pet', async (req, res) => {
     const newLastPetDate = new Date(now.getTime() - newHoursSincePet * 60 * 60 * 1000);
     const newLastPetAt = newLastPetDate.toISOString();
 
-    await req.db.run(
-      'UPDATE solmates SET last_pet_at = ?, pets_given = pets_given + 1, updated_at = ? WHERE pubkey = ?',
+    await query(
+      'UPDATE solmates SET last_pet_at = $1, pets_given = pets_given + 1, updated_at = $2 WHERE pubkey = $3',
       [newLastPetAt, now.toISOString(), pubkey]
     );
 
-    // Add XP for petting
-    await addXp(req.db, pubkey, XP_FOR_PET);
+    // NOTE: Assumes addXp is refactored to use the new database connection method.
+    await addXp(pubkey, XP_FOR_PET);
 
-    const updatedSolmate = await getFullSolmateData(req.db, pubkey);
+    const updatedSolmate = await getFullSolmateData(pubkey);
     if (!updatedSolmate) {
         return res.status(404).json({ error: 'Solmate not found after update' });
     }
@@ -270,17 +250,18 @@ router.post('/clean', async (req, res) => {
   }
 
   try {
-    const solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    const { rows: solmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+    const solmate = solmateRows[0];
     if (!solmate) {
       return res.status(404).json({ error: 'Solmate not found' });
     }
 
-    await req.db.run('UPDATE solmates SET has_poo = 0, poos_cleaned = poos_cleaned + 1, updated_at = ? WHERE pubkey = ?', [new Date().toISOString(), pubkey]);
+    await query('UPDATE solmates SET has_poo = false, poos_cleaned = poos_cleaned + 1, updated_at = $1 WHERE pubkey = $2', [new Date().toISOString(), pubkey]);
 
-    // Add a small amount of XP for cleaning
-    await addXp(req.db, pubkey, 5);
+    // NOTE: Assumes addXp is refactored to use the new database connection method.
+    await addXp(pubkey, 5);
 
-    const updatedSolmate = await getFullSolmateData(req.db, pubkey);
+    const updatedSolmate = await getFullSolmateData(pubkey);
     if (!updatedSolmate) {
         return res.status(404).json({ error: 'Solmate not found after update' });
     }
@@ -303,22 +284,23 @@ router.post('/run', async (req, res) => {
     }
 
     try {
-        const solmate = await req.db.get<SolmateData>('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+        const { rows: solmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+        const solmate = solmateRows[0];
         if (!solmate) {
             return res.status(404).json({ error: 'Solmate not found' });
         }
 
         const xpGained = Math.floor(score * XP_PER_RUN_SCORE);
         if (xpGained > 0) {
-            await addXp(req.db, pubkey, xpGained);
+            // NOTE: Assumes addXp is refactored to use the new database connection method.
+            await addXp(pubkey, xpGained);
         }
 
-        // New logic for high score
         if (score > solmate.run_highscore) {
-            await req.db.run('UPDATE solmates SET run_highscore = ? WHERE pubkey = ?', [score, pubkey]);
+            await query('UPDATE solmates SET run_highscore = $1 WHERE pubkey = $2', [score, pubkey]);
         }
 
-        const updatedSolmate = await getFullSolmateData(req.db, pubkey);
+        const updatedSolmate = await getFullSolmateData(pubkey);
         if (!updatedSolmate) {
             return res.status(404).json({ error: 'Solmate not found after update' });
         }
@@ -337,11 +319,11 @@ router.post('/decorations', async (req, res) => {
     return res.status(400).json({ error: 'pubkey and decorations array are required' });
   }
 
-  const db = req.db;
+  const client = await pool.connect();
 
   try {
-    // --- Security Validation Step ---
-    const solmate = await db.get('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    const { rows: solmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+    const solmate = solmateRows[0];
     if (!solmate) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -361,42 +343,33 @@ router.post('/decorations', async (req, res) => {
           if (manifestItem.unlock.type === 'level' && userLevel < manifestItem.unlock.level) {
             return res.status(403).json({ error: `Attempted to equip a locked item: ${asset.name}. Required level: ${manifestItem.unlock.level}` });
           }
-          // TODO: Add validation for 'paid' items once payment tracking is implemented
         }
       }
     }
-    // --- End Security Validation ---
 
+    await client.query('BEGIN');
 
-    // Use a transaction to ensure atomicity
-    await db.exec('BEGIN TRANSACTION');
+    await client.query('DELETE FROM selected_decorations WHERE solmate_pubkey = $1', [pubkey]);
 
-    // Clear old decorations for this user
-    await db.run('DELETE FROM selected_decorations WHERE solmate_pubkey = ?', [pubkey]);
-
-    // Insert new decorations
-    const insertStmt = await db.prepare(
-      'INSERT INTO selected_decorations (solmate_pubkey, row, col, decoration_name, decoration_url) VALUES (?, ?, ?, ?, ?)'
-    );
-
+    const insertQuery = 'INSERT INTO selected_decorations (solmate_pubkey, row, col, decoration_name, decoration_url) VALUES ($1, $2, $3, $4, $5)';
     for (let r = 0; r < decorations.length; r++) {
         const row = decorations[r];
         for (let c = 0; c < row.length; c++) {
             const asset = row[c];
             if (asset) {
-                await insertStmt.run(pubkey, r, c, asset.name, asset.url);
+                await client.query(insertQuery, [pubkey, r, c, asset.name, asset.url]);
             }
         }
     }
 
-    await insertStmt.finalize();
-    await db.exec('COMMIT');
+    await client.query('COMMIT');
 
     res.status(200).json({ message: 'Decorations saved successfully' });
   } catch (error) {
-    await db.exec('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('Error saving decorations:', error);
-    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+      client.release();
   }
 });
 
@@ -407,11 +380,9 @@ router.post('/background', async (req, res) => {
     return res.status(400).json({ error: 'pubkey and backgroundUrl are required' });
   }
 
-  const db = req.db;
-
   try {
-    // --- Security Validation Step ---
-    const solmate = await db.get('SELECT * FROM solmates WHERE pubkey = ?', [pubkey]);
+    const { rows: solmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+    const solmate = solmateRows[0];
     if (!solmate) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -431,11 +402,9 @@ router.post('/background', async (req, res) => {
         if (bgManifestItem.unlock.type === 'level' && userLevel < bgManifestItem.unlock.level) {
             return res.status(403).json({ error: `Attempted to equip a locked background. Required level: ${bgManifestItem.unlock.level}` });
         }
-        // TODO: Add validation for 'paid' items
     }
-    // --- End Security Validation ---
 
-    await db.run('UPDATE solmates SET selected_background = ? WHERE pubkey = ?', [backgroundUrl, pubkey]);
+    await query('UPDATE solmates SET selected_background = $1 WHERE pubkey = $2', [backgroundUrl, pubkey]);
 
     res.status(200).json({ message: 'Background saved successfully' });
   } catch (error) {

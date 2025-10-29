@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { openDb } from '../db/database.js';
+import { query } from '../db/database.js';
 import { generateNormalSprite } from '../services/sprite_service.js';
 
 const router = Router();
@@ -8,10 +8,9 @@ router.get('/', async (req, res) => {
   const userPubkey = req.query.pubkey as string | undefined;
 
   try {
-    const db = await openDb();
     // Use DENSE_RANK for fair ranking with a timestamp tie-breaker.
     // This query gets all players ranked 20 or less.
-    const topPlayers = await db.all(
+    const { rows: topPlayers } = await query(
       `SELECT * FROM (
         SELECT
           pubkey, name, run_highscore, animal, updated_at,
@@ -52,7 +51,7 @@ router.get('/', async (req, res) => {
       const userInTopList = leaderboard.some(p => p.pubkey === userPubkey);
       if (!userInTopList) {
         // If user is not in the top list, get their specific rank.
-        const userRow = await db.get(
+        const { rows: userRowRows } = await query(
           `SELECT * FROM (
             SELECT
               pubkey, name, run_highscore, animal,
@@ -60,9 +59,10 @@ router.get('/', async (req, res) => {
             FROM solmates
             WHERE run_highscore > 0
           )
-          WHERE pubkey = ?`,
-          userPubkey
+          WHERE pubkey = $1`,
+          [userPubkey]
         );
+        const userRow = userRowRows[0];
 
         if (userRow) {
           try {
@@ -98,23 +98,21 @@ router.get('/', async (req, res) => {
 
 router.get('/survival', async (req, res) => {
     const userPubkey = req.query.pubkey as string | undefined;
-  
+    console.log("HERE");
     try {
-      const db = await openDb();
-      const topPlayers = await db.all(
+      const { rows: topPlayers } = await query(
         `SELECT *,
-           (strftime('%s', 'now') - strftime('%s', created_at)) as survival_time
+           (EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM created_at)) as survival_time
          FROM (
           SELECT
             pubkey, name, created_at, animal,
             DENSE_RANK() OVER (ORDER BY created_at ASC) as rank
           FROM solmates
-          WHERE created_at IS NOT NULL AND (strftime('%s', 'now') - strftime('%s', last_fed_at)) < 90000
+          WHERE created_at IS NOT NULL AND (EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM last_fed_at)) < 90000
         )
         WHERE rank <= 20
         ORDER BY rank ASC`
       );
-  
       const leaderboard = await Promise.all(
         topPlayers.map(async (player) => {
           try {
@@ -143,19 +141,20 @@ router.get('/survival', async (req, res) => {
       if (userPubkey) {
         const userInTopList = leaderboard.some(p => p.pubkey === userPubkey);
         if (!userInTopList) {
-          const userRow = await db.get(
+          const { rows: userRowRows } = await query(
             `SELECT *,
-               (strftime('%s', 'now') - strftime('%s', created_at)) as survival_time
+               (EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM created_at)) as survival_time
              FROM (
               SELECT
                 pubkey, name, created_at, animal,
                 DENSE_RANK() OVER (ORDER BY created_at ASC) as rank
               FROM solmates
-              WHERE created_at IS NOT NULL AND (strftime('%s', 'now') - strftime('%s', last_fed_at)) < 90000
+              WHERE created_at IS NOT NULL AND (EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM last_fed_at)) < 90000
             )
-            WHERE pubkey = ?`,
-            userPubkey
+            WHERE pubkey = $1`,
+            [userPubkey]
           );
+          const userRow = userRowRows[0];
   
           if (userRow) {
             try {

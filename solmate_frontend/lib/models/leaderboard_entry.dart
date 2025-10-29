@@ -15,10 +15,10 @@ class LeaderboardEntry {
 
   factory LeaderboardEntry.fromJson(Map<String, dynamic> json) {
     return LeaderboardEntry(
-      rank: json['rank'],
+      rank: int.parse(json['rank']),
       pubkey: json['pubkey'],
       name: json['name'],
-      score: json['score'],
+      score: json['score'] is String ? double.parse(json['score']).toInt() : (json['score'] as num).toInt(), // Handle string (double) or num
       sprite: json['sprite'],
     );
   }

@@ -1,4 +1,4 @@
-import { openDb } from '../src/db/database.js';
+import { query, pool } from '../src/db/database.js';
 
 async function setLevel(pubkey: string) {
   const args = process.argv.slice(2);
@@ -15,15 +15,13 @@ async function setLevel(pubkey: string) {
       process.exit(1);
   }
 
-  let db;
   try {
-    db = await openDb();
-    const result = await db.run(
-      'UPDATE solmates SET level = ? WHERE pubkey = ?',
+    const result = await query(
+      'UPDATE solmates SET level = $1 WHERE pubkey = $2',
       [level, pubkey]
     );
 
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       console.log(`No solmate found with pubkey: ${pubkey}`);
     } else {
       console.log(`Successfully set level to ${level} for solmate with pubkey: ${pubkey}`);
@@ -31,7 +29,7 @@ async function setLevel(pubkey: string) {
   } catch (error) {
     console.error('Failed to set level:', error);
   } finally {
-    await db?.close();
+    await pool.end();
   }
 }
 

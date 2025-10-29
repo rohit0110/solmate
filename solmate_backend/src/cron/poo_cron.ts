@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { openDb } from '../db/database.js';
+import { query } from '../db/database.js';
 
 /**
  * Starts a CRON job to occasionally make solmates poo.
@@ -9,9 +9,8 @@ export function startPooCronJob() {
   cron.schedule('* * * * *', async () => {
     console.log('Running hourly poo CRON job...');
     try {
-      const db = await openDb();
       // Get all solmates that haven't pooed yet
-      const solmates = await db.all('SELECT pubkey FROM solmates WHERE has_poo = 0');
+      const { rows: solmates } = await query('SELECT pubkey FROM solmates WHERE has_poo = false');
 
       if (solmates.length === 0) {
         console.log('All solmates have already pooed or there are no solmates, skipping.');
@@ -22,9 +21,9 @@ export function startPooCronJob() {
 
       const updates = solmates.map(solmate => {
         // 20% chance to poo
-        if (Math.random() < 1) {
+        if (Math.random() < 0.2) {
           console.log(`Solmate ${solmate.pubkey} is pooing.`);
-          return db.run('UPDATE solmates SET has_poo = 1 WHERE pubkey = ?', [solmate.pubkey]);
+          return query('UPDATE solmates SET has_poo = true WHERE pubkey = $1', [solmate.pubkey]);
         }
         return Promise.resolve();
       });

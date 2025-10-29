@@ -1,7 +1,6 @@
-
 import { Router } from 'express';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { openDb } from '../db/database.js';
+import { query, pool } from '../db/database.js'; // Changed import
 import config from '../config/config.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -40,12 +39,12 @@ router.post('/verify', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields: transactionSignature, assetId, userPubkey' });
   }
 
-  const db = await openDb();
+  const client = await pool.connect(); // Get a client for the transaction
 
   try {
     // // 1. Check for Replay Attacks
-    // const existingTx = await db.get('SELECT * FROM processed_transactions WHERE signature = ?', transactionSignature);
-    // if (existingTx) {
+    // const { rows: existingTxRows } = await client.query('SELECT * FROM processed_transactions WHERE signature = $1', [transactionSignature]);
+    // if (existingTxRows[0]) {
     //   return res.status(409).json({ error: 'Transaction signature already processed.' });
     // }
 
@@ -104,17 +103,19 @@ router.post('/verify', async (req, res) => {
     // }
 
     // 4. All checks passed, update database
-    await db.run('BEGIN');
-    await db.run('INSERT INTO processed_transactions (signature) VALUES (?)', transactionSignature);
-    await db.run('INSERT INTO unlocked_assets (user_pubkey, asset_id, purchase_transaction_signature) VALUES (?, ?, ?)', userPubkey, assetId, transactionSignature);
-    await db.run('COMMIT');
+    await client.query('BEGIN');
+    await client.query('INSERT INTO processed_transactions (signature) VALUES ($1)', [transactionSignature]);
+    await client.query('INSERT INTO unlocked_assets (user_pubkey, asset_id, purchase_transaction_signature) VALUES ($1, $2, $3)', [userPubkey, assetId, transactionSignature]);
+    await client.query('COMMIT');
 
     res.status(200).json({ message: 'Purchase verified and asset unlocked successfully.' });
 
   } catch (error) {
-    await db.run('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('Error verifying purchase:', error);
     res.status(500).send('Internal server error during purchase verification.');
+  } finally {
+    client.release(); // Release the client back to the pool
   }
 });
 

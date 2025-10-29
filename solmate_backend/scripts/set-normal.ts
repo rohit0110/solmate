@@ -1,18 +1,18 @@
-import { openDb } from '../src/db/database.js';
+import { query, pool } from '../src/db/database.js';
 
 async function setNormal(pubkey: string) {
-  const db = await openDb();
   try {
-    const solmate = await db.get('SELECT * FROM solmates WHERE pubkey = ?', pubkey);
+    const { rows: solmateRows } = await query('SELECT * FROM solmates WHERE pubkey = $1', [pubkey]);
+    const solmate = solmateRows[0];
     if (!solmate) {
       console.error(`Solmate with pubkey "${pubkey}" not found.`);
       return;
     }
     const now = new Date().toISOString();
-    await db.run('UPDATE solmates SET last_fed_at = ?, last_pet_at = ? WHERE pubkey = ?', [now, now, pubkey]);
-    console.log(`Set low health for solmate ${pubkey}.`);
+    await query('UPDATE solmates SET last_fed_at = $1, last_pet_at = $2 WHERE pubkey = $3', [now, now, pubkey]);
+    console.log(`Set normal status (fed and pet) for solmate ${pubkey}.`);
   } finally {
-    await db.close();
+    await pool.end();
   }
 }
 
