@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:nes_ui/nes_ui.dart';
 import 'package:solmate_frontend/screens/home_screen.dart';
+import 'package:solmate_frontend/screens/solmate_selection_screen.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const HomeScreen(),
+        '/selectionScreen': (context) => SolmateSelectionScreen()
       },
     );
   }
